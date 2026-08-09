@@ -7,6 +7,10 @@ on:
         description: "Run without writing ClickUp tasks"
         type: boolean
         default: true
+      max_leads:
+        description: "Maximum review-ready leads for this manual run"
+        type: number
+        default: 2
   schedule:
     # Run at both possible 07:00 UK UTC offsets; the app's timezone gate
     # ensures exactly one proceeds during GMT/BST.
@@ -31,9 +35,9 @@ jobs:
       DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
@@ -46,5 +50,5 @@ jobs:
           if [ "${{ github.event_name }}" = "schedule" ]; then
             luminary-leads --scheduled
           else
-            luminary-leads
+            luminary-leads --max-leads "${{ inputs.max_leads }}"
           fi
