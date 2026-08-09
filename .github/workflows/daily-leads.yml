@@ -24,9 +24,9 @@ jobs:
       group: luminary-daily-leads
       cancel-in-progress: false
     env:
-      COMPANIES_HOUSE_API_KEY: ${{ secrets.COMPANIES_HOUSE_API_KEY }}
-      FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}
-      CLICKUP_API_TOKEN: ${{ secrets.CLICKUP_API_TOKEN }}
+      COMPANIES_HOUSE_API_KEY: ${{ secrets.COMPANIES_HOUSE_API }}
+      FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API }}
+      CLICKUP_API_TOKEN: ${{ secrets.CLICK_UP_TOKEN }}
       CLICKUP_LIST_ID: ${{ secrets.CLICKUP_LIST_ID }}
       DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}
 
