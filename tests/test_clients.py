@@ -25,6 +25,10 @@ class FakeSession:
         self.last_request = (url, kwargs)
         return FakeResponse(self.payload)
 
+    def put(self, url, **kwargs):
+        self.last_request = (url, kwargs)
+        return FakeResponse(self.payload)
+
 
 def test_companies_house_contract_and_mapping():
     session = FakeSession({
@@ -66,3 +70,58 @@ def test_clickup_dry_run_contains_audit_fields_and_no_secret():
     assert "Email source: https://brightagency.co.uk/contact" in payload["description"]
     assert f"Privacy notice: {privacy_url}" in payload["description"]
     assert "secret" not in str(payload)
+
+
+def test_clickup_returns_only_completed_unsynced_leads():
+    privacy_url = "https://luminaryaibusiness.com/luminaryaibusiness-privacy.html"
+    description = f"""Company number: 12345678
+Incorporated: 2026-07-20
+Industry segment: marketing
+Registered postcode: SE1 2AA
+Website: https://brightagency.co.uk
+Public corporate email: hello@brightagency.co.uk
+Email source: https://brightagency.co.uk/contact
+"""
+    session = FakeSession({
+        "tasks": [{
+            "id": "task-1",
+            "name": "[REVIEW REQUIRED] AI Lab lead: Bright Agency Ltd [12345678]",
+            "description": description,
+            "status": {"status": "completed"},
+        }]
+    })
+    client = ClickUpClient(
+        "secret",
+        "list-id",
+        {
+            "task_name_prefix": "[REVIEW REQUIRED] AI Lab lead",
+            "privacy_notice_url": privacy_url,
+        },
+        session=session,
+    )
+
+    leads = client.approved_leads("completed")
+
+    assert len(leads) == 1
+    assert leads[0].company_name == "Bright Agency Ltd"
+    assert leads[0].email == "hello@brightagency.co.uk"
+    assert leads[0].privacy_notice_url == privacy_url
+
+
+def test_clickup_sync_marker_prevents_duplicate_processing():
+    session = FakeSession({
+        "tasks": [{
+            "id": "task-1",
+            "name": "lead",
+            "description": "Instantly sync outcome: uploaded",
+            "status": {"status": "completed"},
+        }]
+    })
+    client = ClickUpClient(
+        "secret",
+        "list-id",
+        {"task_name_prefix": "[REVIEW REQUIRED] AI Lab lead", "privacy_notice_url": "x"},
+        session=session,
+    )
+
+    assert client.approved_leads("completed") == []
