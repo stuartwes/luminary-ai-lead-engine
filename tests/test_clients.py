@@ -50,11 +50,19 @@ def test_companies_house_contract_and_mapping():
 def test_clickup_dry_run_contains_audit_fields_and_no_secret():
     company = Company("12345678", "Bright Agency Ltd", "2026-07-20", "ltd", "active", ["73110"], {"postal_code": "SE1 2AA"})
     lead = EnrichedLead(company, "https://brightagency.co.uk", "hello@brightagency.co.uk", "https://brightagency.co.uk/contact", "marketing", 85)
-    client = ClickUpClient("secret", "list-id", {"task_name_prefix": "[REVIEW REQUIRED] AI Lab lead"})
+    privacy_url = "https://luminaryaibusiness.com/luminaryaibusiness-privacy.html"
+    client = ClickUpClient(
+        "secret",
+        "list-id",
+        {
+            "task_name_prefix": "[REVIEW REQUIRED] AI Lab lead",
+            "privacy_notice_url": privacy_url,
+        },
+    )
     result = client.create_review_task(lead, dry_run=True)
     payload = result["payload"]
     assert "[REVIEW REQUIRED]" in payload["name"]
     assert "Company number: 12345678" in payload["description"]
     assert "Email source: https://brightagency.co.uk/contact" in payload["description"]
+    assert f"Privacy notice: {privacy_url}" in payload["description"]
     assert "secret" not in str(payload)
-
