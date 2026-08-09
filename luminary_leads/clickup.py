@@ -59,9 +59,9 @@ class ClickUpClient:
         response.raise_for_status()
         return response.json()
 
-    @staticmethod
-    def _description(lead: EnrichedLead) -> str:
+    def _description(self, lead: EnrichedLead) -> str:
         company = lead.company
+        privacy_notice_url = self.config["privacy_notice_url"]
         return f"""## Review before outreach
 
 Company number: {company.company_number}
@@ -79,8 +79,10 @@ Compliance controls:
 - Public role-based address only
 - Source page retained
 - Corporate body must be confirmed before sending
-- Check the suppression list and privacy notice
+- Check the suppression list
 - Do not contact until this task is manually approved
+
+Privacy notice: {privacy_notice_url}
 
 Suggested offer: Free New Business AI Launch Plan leading to the Luminary AI Business Lab
 Community: https://www.skool.com/luminaryai-business-lab-3937/about
