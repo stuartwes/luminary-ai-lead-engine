@@ -25,6 +25,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--config", default="config/targeting.yaml")
     parser.add_argument("--output", default="output/leads.csv")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--max-leads",
+        type=int,
+        help="Override the configured lead cap for this run (useful for a small live pilot)",
+    )
     parser.add_argument("--scheduled", action="store_true", help="Exit unless this is the configured local hour")
     return parser.parse_args()
 
@@ -33,6 +38,11 @@ def main() -> int:
     args = parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     config = load_config(args.config)
+    if args.max_leads is not None:
+        if args.max_leads < 1:
+            raise ValueError("--max-leads must be at least 1")
+        config["collection"]["max_approved_leads_per_run"] = args.max_leads
+        logging.info("Lead cap overridden for this run: %d", args.max_leads)
     if args.scheduled and not scheduled_window(config):
         logging.info("Outside the configured local run hour; exiting safely")
         return 0
@@ -56,4 +66,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
