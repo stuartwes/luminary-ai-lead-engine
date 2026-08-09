@@ -10,6 +10,7 @@ This project finds recently incorporated UK corporate businesses, enriches them 
 - Only public role-based email addresses on the matched company domain are retained.
 - Personal webmail domains and named mailboxes are rejected by default.
 - The source page is stored in ClickUp.
+- The published privacy-notice URL is stored with every ClickUp review task.
 - Every lead task is visibly prefixed `[REVIEW REQUIRED]`.
 - Existing ClickUp company numbers are skipped.
 - Email sending is deliberately absent from this release.
@@ -91,6 +92,7 @@ Edit `config/targeting.yaml` to change:
 - Allowed role-address prefixes
 - Blocked domains
 - Firecrawl retry attempts and backoff
+- Privacy-notice URL included in each ClickUp task
 - Scheduled UK hour
 
 The supplied configuration starts with London, South East England, Essex and Hertfordshire and limits output to 50 review-ready leads per run.
