@@ -4,10 +4,11 @@ import re
 
 import requests
 
-from .models import EnrichedLead
+from .models import ApprovedLead, EnrichedLead
 
 
 COMPANY_NUMBER_RE = re.compile(r"Company number:\s*([A-Z0-9]+)", re.IGNORECASE)
+INSTANTLY_SYNC_MARKER = "Instantly sync outcome:"
 
 
 class ClickUpClient:
@@ -58,6 +59,81 @@ class ClickUpClient:
         )
         response.raise_for_status()
         return response.json()
+
+    def approved_leads(self, status: str) -> list[ApprovedLead]:
+        page = 0
+        leads: list[ApprovedLead] = []
+        while True:
+            response = self.session.get(
+                f"{self.BASE_URL}/list/{self.list_id}/task",
+                headers=self.headers,
+                params={
+                    "page": page,
+                    "include_closed": "true",
+                    "subtasks": "true",
+                    "statuses[]": status,
+                },
+                timeout=45,
+            )
+            response.raise_for_status()
+            tasks = response.json().get("tasks", [])
+            for task in tasks:
+                task_status = str((task.get("status") or {}).get("status") or "")
+                description = str(task.get("description") or "")
+                if task_status.casefold() != status.casefold() or INSTANTLY_SYNC_MARKER in description:
+                    continue
+                leads.append(self._approved_lead(task))
+            if len(tasks) < 100:
+                break
+            page += 1
+        return leads
+
+    def mark_instantly_synced(self, lead: ApprovedLead, outcome: str, campaign_id: str) -> None:
+        marker = (
+            f"\n\n{INSTANTLY_SYNC_MARKER} {outcome}\n"
+            f"Instantly campaign ID: {campaign_id}\n"
+        )
+        response = self.session.put(
+            f"{self.BASE_URL}/task/{lead.task_id}",
+            headers=self.headers,
+            json={"description": lead.task_description.rstrip() + marker},
+            timeout=45,
+        )
+        response.raise_for_status()
+
+    def _approved_lead(self, task: dict) -> ApprovedLead:
+        description = str(task.get("description") or "")
+        company_number = self._field(description, "Company number")
+        prefix = f'{self.config["task_name_prefix"]}:'
+        company_name = str(task.get("name") or "").removeprefix(prefix).strip()
+        company_name = re.sub(
+            rf"\s*\[{re.escape(company_number)}\]\s*$", "", company_name
+        ).strip()
+        return ApprovedLead(
+            task_id=str(task["id"]),
+            task_description=description,
+            company_number=company_number,
+            company_name=company_name,
+            incorporated_on=self._field(description, "Incorporated"),
+            industry=self._field(description, "Industry segment"),
+            postcode=self._field(description, "Registered postcode"),
+            website=self._field(description, "Website"),
+            email=self._field(description, "Public corporate email").lower(),
+            email_source_url=self._field(description, "Email source"),
+            privacy_notice_url=(
+                self._field(description, "Privacy notice", required=False)
+                or str(self.config["privacy_notice_url"])
+            ),
+        )
+
+    @staticmethod
+    def _field(description: str, label: str, *, required: bool = True) -> str:
+        match = re.search(rf"^{re.escape(label)}:\s*(.+?)\s*$", description, re.MULTILINE)
+        if not match:
+            if required:
+                raise ValueError(f"ClickUp task is missing required field: {label}")
+            return ""
+        return match.group(1).strip()
 
     def _description(self, lead: EnrichedLead) -> str:
         company = lead.company
