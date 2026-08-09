@@ -61,21 +61,21 @@ Run live ClickUp creation:
 DRY_RUN=false luminary-leads
 ```
 
-Each run writes `output/leads.csv` as an audit export.
+Each run writes `output/leads.csv` inside its temporary runner. The public GitHub workflow deliberately does not upload that file as an artifact because it can contain business contact addresses. The ClickUp task remains the private audit record.
 
 ## GitHub setup
 
-1. Create a new private GitHub repository.
-2. Add this project and push it to the default branch.
-3. In **Settings → Secrets and variables → Actions**, create:
+1. In **Settings → Secrets and variables → Actions**, create:
    - `COMPANIES_HOUSE_API_KEY`
    - `FIRECRAWL_API_KEY`
    - `CLICKUP_API_TOKEN`
    - `CLICKUP_LIST_ID`
-4. Open **Actions → Daily Luminary AI leads → Run workflow**.
-5. Keep `dry_run` selected for the first test.
-6. Check the run log and downloaded CSV.
-7. Run manually again with `dry_run` cleared to create ClickUp tasks.
+2. Open **Actions → Daily Luminary AI leads → Run workflow**.
+3. Keep `dry_run` selected for the first test.
+4. Check the run log. A dry run does not create ClickUp tasks.
+5. Run manually again with `dry_run` cleared to create ClickUp tasks.
+
+This repository is public. Never commit API keys, `.env`, generated lead CSV files or exported ClickUp data.
 
 The workflow is scheduled at 07:00 Europe/London. GitHub schedules both possible UTC offsets and the application permits only the correct GMT/BST run.
 
@@ -123,7 +123,7 @@ The supplied `stuart@stuartwesselby.com` address does not align with the stated 
 
 ## Known limitations
 
-- Companies may not have launched a website 14–30 days after incorporation.
+- Companies may not have launched a website 14 days after incorporation.
 - Registered-office postcodes can point to accountants or formation agents.
 - SIC codes are self-reported and can be broad.
 - Website matching is deliberately conservative, so some valid companies will be skipped.
