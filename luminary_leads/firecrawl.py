@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import re
+import time
 from dataclasses import dataclass
+import logging
+from collections.abc import Callable
 from urllib.parse import urljoin, urlparse
 
 import requests
@@ -11,6 +14,8 @@ from .models import Company, EnrichedLead
 
 EMAIL_RE = re.compile(r"(?i)(?<![\w.+-])([a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)+)")
 GENERIC_COMPANY_WORDS = {"limited", "ltd", "llp", "uk", "group", "services", "solutions", "company", "co"}
+LOGGER = logging.getLogger(__name__)
+RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
 
 
 @dataclass(slots=True)
@@ -24,10 +29,17 @@ class SearchResult:
 class FirecrawlClient:
     BASE_URL = "https://api.firecrawl.dev/v2"
 
-    def __init__(self, api_key: str, enrichment_config: dict, session: requests.Session | None = None) -> None:
+    def __init__(
+        self,
+        api_key: str,
+        enrichment_config: dict,
+        session: requests.Session | None = None,
+        sleep: Callable[[float], None] = time.sleep,
+    ) -> None:
         self.api_key = api_key
         self.config = enrichment_config
         self.session = session or requests.Session()
+        self.sleep = sleep
 
     @property
     def headers(self) -> dict[str, str]:
@@ -88,11 +100,7 @@ class FirecrawlClient:
             "safe": True,
             "ignoreInvalidURLs": True,
         }
-        response = self.session.post(
-            f"{self.BASE_URL}/search", headers=self.headers, json=payload, timeout=60
-        )
-        response.raise_for_status()
-        raw = response.json().get("data") or {}
+        raw = self._post_json("search", payload).get("data") or {}
         items = raw.get("web", []) if isinstance(raw, dict) else raw
         results = [
             SearchResult(
@@ -120,11 +128,37 @@ class FirecrawlClient:
             "location": {"country": "GB", "languages": ["en-GB"]},
             "timeout": 45000,
         }
-        response = self.session.post(
-            f"{self.BASE_URL}/scrape", headers=self.headers, json=payload, timeout=60
-        )
-        response.raise_for_status()
-        return response.json().get("data") or {}
+        return self._post_json("scrape", payload).get("data") or {}
+
+    def _post_json(self, endpoint: str, payload: dict) -> dict:
+        attempts = max(1, int(self.config.get("retry_attempts", 3)))
+        backoff = max(0.0, float(self.config.get("retry_backoff_seconds", 2)))
+        url = f"{self.BASE_URL}/{endpoint}"
+
+        for attempt in range(1, attempts + 1):
+            try:
+                response = self.session.post(
+                    url, headers=self.headers, json=payload, timeout=60
+                )
+                response.raise_for_status()
+                return response.json()
+            except requests.RequestException as exc:
+                status = exc.response.status_code if exc.response is not None else None
+                retryable = status is None or status in RETRYABLE_STATUS_CODES
+                if not retryable or attempt == attempts:
+                    raise
+                delay = backoff * (2 ** (attempt - 1))
+                LOGGER.warning(
+                    "Firecrawl %s attempt %d/%d failed%s; retrying in %.1fs",
+                    endpoint,
+                    attempt,
+                    attempts,
+                    f" with HTTP {status}" if status else "",
+                    delay,
+                )
+                self.sleep(delay)
+
+        raise RuntimeError("Firecrawl retry loop ended unexpectedly")
 
     def _email_allowed(self, email: str, website: str) -> bool:
         local, _, domain = email.lower().rpartition("@")
