@@ -143,3 +143,4 @@ enrichment:
 
 clickup:
   task_name_prefix: "[REVIEW REQUIRED] AI Lab lead"
+  privacy_notice_url: "https://luminaryaibusiness.com/luminaryaibusiness-privacy.html"
