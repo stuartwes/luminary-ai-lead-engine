@@ -1,0 +1,142 @@
+schedule:
+  timezone: Europe/London
+  local_hour: 7
+
+collection:
+  # Each company is considered once, exactly 14 days after incorporation.
+  # This limits repeat scraping and creates a predictable daily cohort.
+  days_after_incorporation: 14
+  max_candidates_per_run: 300
+  max_approved_leads_per_run: 50
+  company_types: [ltd, llp]
+  company_statuses: [active]
+
+# London, South East England, Essex and Hertfordshire. Adjust freely.
+location:
+  postcode_prefixes:
+    - E
+    - EC
+    - N
+    - NW
+    - SE
+    - SW
+    - W
+    - WC
+    - BR
+    - CR
+    - DA
+    - EN
+    - HA
+    - IG
+    - KT
+    - RM
+    - SM
+    - TW
+    - UB
+    - BN
+    - CT
+    - GU
+    - HP
+    - ME
+    - MK
+    - OX
+    - PO
+    - RG
+    - RH
+    - SL
+    - SO
+    - TN
+    - CM
+    - CO
+    - SS
+    - AL
+    - SG
+
+industries:
+  consultancy:
+    - "62020"
+    - "70221"
+    - "70229"
+    - "74909"
+  training:
+    - "85320"
+    - "85590"
+    - "85600"
+  marketing:
+    - "73110"
+    - "73120"
+    - "73200"
+  professional_services:
+    - "69102"
+    - "69201"
+    - "69202"
+    - "71111"
+    - "71112"
+    - "71122"
+  recruitment:
+    - "78109"
+    - "78200"
+    - "78300"
+  trades:
+    - "41202"
+    - "43210"
+    - "43220"
+    - "43320"
+    - "43330"
+    - "43341"
+    - "43342"
+    - "43910"
+    - "43999"
+  online_business:
+    - "47910"
+    - "62012"
+    - "63120"
+
+exclusions:
+  sic_codes:
+    - "64209" # holding companies
+    - "68100" # property buying/selling
+    - "68209" # property letting/operating
+    - "99999" # dormant
+  company_name_terms:
+    - holdings
+    - property investments
+    - residents management
+    - right to manage
+    - spv
+
+enrichment:
+  search_results: 5
+  pages_per_site: 4
+  allowed_email_prefixes:
+    - hello
+    - info
+    - contact
+    - enquiries
+    - enquiry
+    - office
+    - admin
+    - team
+    - sales
+  blocked_email_domains:
+    - gmail.com
+    - googlemail.com
+    - outlook.com
+    - hotmail.com
+    - live.com
+    - yahoo.com
+    - icloud.com
+    - aol.com
+  blocked_website_domains:
+    - companieshouse.gov.uk
+    - company-information.service.gov.uk
+    - linkedin.com
+    - facebook.com
+    - instagram.com
+    - x.com
+    - twitter.com
+    - endole.co.uk
+    - companycheck.co.uk
+
+clickup:
+  task_name_prefix: "[REVIEW REQUIRED] AI Lab lead"
