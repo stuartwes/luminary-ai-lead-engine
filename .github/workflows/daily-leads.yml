@@ -1,0 +1,50 @@
+name: Daily Luminary AI leads
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run without writing ClickUp tasks"
+        type: boolean
+        default: true
+  schedule:
+    # Run at both possible 07:00 UK UTC offsets; the app's timezone gate
+    # ensures exactly one proceeds during GMT/BST.
+    - cron: "0 6 * * *"
+    - cron: "0 7 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    concurrency:
+      group: luminary-daily-leads
+      cancel-in-progress: false
+    env:
+      COMPANIES_HOUSE_API_KEY: ${{ secrets.COMPANIES_HOUSE_API_KEY }}
+      FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}
+      CLICKUP_API_TOKEN: ${{ secrets.CLICKUP_API_TOKEN }}
+      CLICKUP_LIST_ID: ${{ secrets.CLICKUP_LIST_ID }}
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: pip install .
+
+      - name: Collect and enrich leads
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            luminary-leads --scheduled
+          else
+            luminary-leads
+          fi
