@@ -1,6 +1,6 @@
 # Luminary AI New Business Lead Engine
 
-This project finds recently incorporated UK corporate businesses, enriches them from public company websites, and creates human-review tasks in ClickUp. It does **not** send email.
+This project finds recently incorporated UK corporate businesses, enriches them from public company websites, and creates human-review tasks in ClickUp. A separate approval-gated workflow can add completed tasks to Instantly; campaign activation and email sending remain controlled in Instantly.
 
 ## Safety model
 
@@ -13,7 +13,7 @@ This project finds recently incorporated UK corporate businesses, enriches them 
 - The published privacy-notice URL is stored with every ClickUp review task.
 - Every lead task is visibly prefixed `[REVIEW REQUIRED]`.
 - Existing ClickUp company numbers are skipped.
-- Email sending is deliberately absent from this release.
+- Only manually approved (`completed`) ClickUp tasks can enter Instantly.
 
 ## Accounts and identifiers required
 
@@ -96,6 +96,18 @@ Edit `config/targeting.yaml` to change:
 - Scheduled UK hour
 
 The supplied configuration starts with London, South East England, Essex and Hertfordshire and limits output to 50 review-ready leads per run.
+
+## Approved-lead sync to Instantly
+
+Completed ClickUp tasks can be transferred to the configured Instantly campaign with:
+
+```bash
+DRY_RUN=true luminary-sync-approved --dry-run
+```
+
+The sync uses Instantly API v2, the workspace blocklist and workspace-wide duplicate checking. A final outcome marker is appended to each processed ClickUp task so it cannot be imported repeatedly.
+
+The `Sync approved leads to Instantly` workflow runs manually in dry-run mode by default. Its hourly schedule remains disabled until the repository variable `INSTANTLY_SYNC_ENABLED` is set to `true`. Enable that variable only after the campaign copy, sender accounts, schedule and unsubscribe handling are ready.
 
 ## Before connecting an email sender
 
