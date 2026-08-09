@@ -144,3 +144,9 @@ enrichment:
 clickup:
   task_name_prefix: "[REVIEW REQUIRED] AI Lab lead"
   privacy_notice_url: "https://luminaryaibusiness.com/luminaryaibusiness-privacy.html"
+
+instantly:
+  campaign_id: "92fb1fbd-92a1-4a07-b500-c4e1d5a38111"
+  approved_clickup_status: completed
+  skip_if_in_workspace: true
+  verify_leads_on_import: false
