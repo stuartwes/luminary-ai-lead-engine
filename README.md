@@ -58,7 +58,7 @@ DRY_RUN=true luminary-leads --dry-run
 Run live ClickUp creation:
 
 ```bash
-DRY_RUN=false luminary-leads
+DRY_RUN=false luminary-leads --max-leads 2
 ```
 
 Each run writes `output/leads.csv` inside its temporary runner. The public GitHub workflow deliberately does not upload that file as an artifact because it can contain business contact addresses. The ClickUp task remains the private audit record.
@@ -71,9 +71,9 @@ Each run writes `output/leads.csv` inside its temporary runner. The public GitHu
    - `CLICKUP_API_TOKEN`
    - `CLICKUP_LIST_ID`
 2. Open **Actions → Daily Luminary AI leads → Run workflow**.
-3. Keep `dry_run` selected for the first test.
+3. Keep `dry_run` selected for the first test. Manual runs default to a two-lead cap.
 4. Check the run log. A dry run does not create ClickUp tasks.
-5. Run manually again with `dry_run` cleared to create ClickUp tasks.
+5. Run manually again with `dry_run` cleared to create up to two pilot ClickUp tasks.
 
 This repository is public. Never commit API keys, `.env`, generated lead CSV files or exported ClickUp data.
 
@@ -90,6 +90,7 @@ Edit `config/targeting.yaml` to change:
 - Company-name and SIC exclusions
 - Allowed role-address prefixes
 - Blocked domains
+- Firecrawl retry attempts and backoff
 - Scheduled UK hour
 
 The supplied configuration starts with London, South East England, Essex and Hertfordshire and limits output to 50 review-ready leads per run.
