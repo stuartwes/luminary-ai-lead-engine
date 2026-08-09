@@ -1,3 +1,5 @@
+import requests
+
 from luminary_leads.firecrawl import FirecrawlClient
 from luminary_leads.models import Company
 
@@ -24,3 +26,60 @@ def test_company_domain_match_scores_highly():
     company = Company("123", "Bright Agency Limited", "2026-07-01", "ltd", "active", ["73110"], {"postal_code": "SE1 2AA"})
     assert client._match_score(company, "https://brightagency.co.uk") >= 60
 
+
+class FakeResponse:
+    def __init__(self, status_code, payload):
+        self.status_code = status_code
+        self.payload = payload
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise requests.HTTPError(response=self)
+
+    def json(self):
+        return self.payload
+
+
+class SequencedSession:
+    def __init__(self, responses):
+        self.responses = iter(responses)
+        self.calls = 0
+
+    def post(self, *args, **kwargs):
+        self.calls += 1
+        return next(self.responses)
+
+
+def test_retries_temporary_firecrawl_errors_with_exponential_backoff():
+    session = SequencedSession([
+        FakeResponse(500, {}),
+        FakeResponse(503, {}),
+        FakeResponse(200, {"data": {"web": []}}),
+    ])
+    delays = []
+    client = FirecrawlClient(
+        "test",
+        {**CONFIG, "retry_attempts": 3, "retry_backoff_seconds": 0.5},
+        session=session,
+        sleep=delays.append,
+    )
+
+    result = client._post_json("search", {"query": "test"})
+
+    assert result == {"data": {"web": []}}
+    assert session.calls == 3
+    assert delays == [0.5, 1.0]
+
+
+def test_does_not_retry_non_transient_firecrawl_errors():
+    session = SequencedSession([FakeResponse(400, {})])
+    client = FirecrawlClient("test", CONFIG, session=session, sleep=lambda _: None)
+
+    try:
+        client._post_json("search", {"query": "test"})
+    except requests.HTTPError:
+        pass
+    else:
+        raise AssertionError("Expected Firecrawl HTTP error")
+
+    assert session.calls == 1
