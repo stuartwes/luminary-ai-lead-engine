@@ -1,0 +1,42 @@
+name: Sync approved leads to Instantly
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Preview approved leads without importing them"
+        type: boolean
+        default: true
+  schedule:
+    - cron: "15 * * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    if: github.event_name == 'workflow_dispatch' || vars.INSTANTLY_SYNC_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: luminary-instantly-sync
+      cancel-in-progress: false
+    env:
+      CLICKUP_API_TOKEN: ${{ secrets.CLICK_UP_TOKEN }}
+      CLICKUP_LIST_ID: ${{ secrets.CLICKUP_LIST_ID }}
+      INSTANTLY_API_KEY: ${{ secrets.INSTANTLY_API }}
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: pip install .
+
+      - name: Sync completed ClickUp leads
+        run: luminary-sync-approved
