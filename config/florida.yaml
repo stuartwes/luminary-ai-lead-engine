@@ -103,6 +103,13 @@ enrichment:
   pages_per_site: 4
   retry_attempts: 3
   retry_backoff_seconds: 2
+  # Keep routine traffic below burst limits. For HTTP 429, Firecrawl's
+  # Retry-After header takes priority; otherwise use a longer capped backoff.
+  minimum_request_interval_seconds: 2
+  rate_limit_retry_attempts: 6
+  rate_limit_backoff_seconds: 10
+  rate_limit_max_wait_seconds: 120
+  retry_jitter_seconds: 1
   allowed_email_prefixes:
     - hello
     - info
