@@ -71,9 +71,10 @@ def test_registry_company_page_is_rejected_even_with_exact_company_details():
 
 
 class FakeResponse:
-    def __init__(self, status_code, payload):
+    def __init__(self, status_code, payload, headers=None):
         self.status_code = status_code
         self.payload = payload
+        self.headers = headers or {}
 
     def raise_for_status(self):
         if self.status_code >= 400:
@@ -103,7 +104,12 @@ def test_retries_temporary_firecrawl_errors_with_exponential_backoff():
     delays = []
     client = FirecrawlClient(
         "test",
-        {**CONFIG, "retry_attempts": 3, "retry_backoff_seconds": 0.5},
+        {
+            **CONFIG,
+            "retry_attempts": 3,
+            "retry_backoff_seconds": 0.5,
+            "retry_jitter_seconds": 0,
+        },
         session=session,
         sleep=delays.append,
     )
@@ -127,6 +133,58 @@ def test_does_not_retry_non_transient_firecrawl_errors():
         raise AssertionError("Expected Firecrawl HTTP error")
 
     assert session.calls == 1
+
+
+def test_honours_retry_after_header_for_rate_limits():
+    session = SequencedSession([
+        FakeResponse(429, {}, {"Retry-After": "7"}),
+        FakeResponse(200, {"data": {"web": []}}),
+    ])
+    delays = []
+    client = FirecrawlClient(
+        "test",
+        {
+            **CONFIG,
+            "rate_limit_retry_attempts": 3,
+            "rate_limit_backoff_seconds": 2,
+            "retry_jitter_seconds": 0,
+        },
+        session=session,
+        sleep=delays.append,
+    )
+
+    result = client._post_json("search", {"query": "test"})
+
+    assert result == {"data": {"web": []}}
+    assert delays == [7.0]
+    assert session.calls == 2
+
+
+def test_rate_limit_backoff_is_longer_and_capped_without_header():
+    session = SequencedSession([
+        FakeResponse(429, {}),
+        FakeResponse(429, {}),
+        FakeResponse(429, {}),
+        FakeResponse(200, {"data": {"web": []}}),
+    ])
+    delays = []
+    client = FirecrawlClient(
+        "test",
+        {
+            **CONFIG,
+            "rate_limit_retry_attempts": 4,
+            "rate_limit_backoff_seconds": 5,
+            "rate_limit_max_wait_seconds": 8,
+            "retry_jitter_seconds": 0,
+        },
+        session=session,
+        sleep=delays.append,
+    )
+
+    client._post_json("search", {"query": "test"})
+
+    assert delays == [5.0, 8.0, 8.0]
+    assert session.calls == 4
 
 
 def test_search_uses_configured_us_market():
