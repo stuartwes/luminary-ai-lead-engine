@@ -9,6 +9,8 @@ This project finds recently incorporated UK corporate businesses, enriches them 
 - Firecrawl results must pass a company/website match threshold.
 - Only public role-based corporate email addresses are retained.
 - Email-only leads require strong company/source evidence and are labelled `web_design`.
+- Registry aggregators such as JARS, OpenCorporates and Endole are rejected as websites, email sources and campaign leads.
+- No-website email leads require the corporate email domain to match the target company's identifying name tokens.
 - Personal webmail domains and named mailboxes are rejected by default.
 - The source page is stored in ClickUp.
 - The published privacy-notice URL is stored with every ClickUp review task.
