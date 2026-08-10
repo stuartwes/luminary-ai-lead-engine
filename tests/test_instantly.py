@@ -1,5 +1,6 @@
 from luminary_leads.instantly import InstantlyClient
 from luminary_leads.models import ApprovedLead
+from luminary_leads.sync_cli import campaign_config
 
 
 class FakeResponse:
@@ -63,3 +64,19 @@ def test_blocklisted_lead_is_reported_as_suppressed():
     assert InstantlyClient.outcome({"leads_uploaded": 0, "in_blocklist": 1}) == (
         "suppressed by Instantly blocklist"
     )
+
+
+def test_campaign_config_routes_each_lead_type_separately():
+    config = {
+        "instantly": {
+            "campaign_id": "ai-campaign",
+            "lead_type": "ai_business_lab",
+        },
+        "instantly_web_design": {
+            "campaign_id": "web-campaign",
+            "lead_type": "web_design",
+        },
+    }
+
+    assert campaign_config(config, "ai_business_lab")["campaign_id"] == "ai-campaign"
+    assert campaign_config(config, "web_design")["campaign_id"] == "web-campaign"
