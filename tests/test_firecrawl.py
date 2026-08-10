@@ -1,6 +1,6 @@
 import requests
 
-from luminary_leads.firecrawl import FirecrawlClient
+from luminary_leads.firecrawl import FirecrawlClient, SearchResult
 from luminary_leads.models import Company
 
 
@@ -46,6 +46,28 @@ def test_role_email_can_qualify_without_a_website_when_company_match_is_strong()
         "jane@brightagency.co.uk", company, 100
     )
     assert not client._email_allowed_without_website("hello@gmail.com", company, 100)
+    assert not client._email_allowed_without_website("info@jars.lt", company, 100)
+
+
+def test_registry_company_page_is_rejected_even_with_exact_company_details():
+    client = FirecrawlClient("test", CONFIG)
+    company = Company(
+        "15099106",
+        "Web Int Limited",
+        "2026-07-01",
+        "ltd",
+        "active",
+        ["62020"],
+        {"postal_code": "EC1V 2NX"},
+    )
+    result = SearchResult(
+        url="https://jars.lt/en/company/uk/15099106-web-int-limited",
+        title="WEB INT LIMITED | Registry code 15099106",
+        description="Registered Address EC1V 2NX. Company status Active.",
+    )
+
+    assert client._looks_like_registry_listing(company, result)
+    assert not client._domain_matches_company(company, result.url)
 
 
 class FakeResponse:
