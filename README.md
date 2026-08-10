@@ -1,19 +1,20 @@
 # Luminary AI New Business Lead Engine
 
-This project finds recently incorporated UK corporate businesses, enriches them from public company websites, and creates human-review tasks in ClickUp. A separate approval-gated workflow can add completed tasks to Instantly; campaign activation and email sending remain controlled in Instantly.
+This project finds recently incorporated UK corporate businesses, enriches them from public web sources, and creates human-review tasks in ClickUp. Leads with a matched company website are offered the AI Business Lab; companies with a verified public business email but no official website found are separated as Luminary AI Web Design opportunities. A separate approval-gated workflow can add completed AI Business Lab tasks to Instantly; campaign activation and email sending remain controlled in Instantly.
 
 ## Safety model
 
 - Companies House is the authoritative company source.
 - Only configured sectors and postcode areas are processed.
 - Firecrawl results must pass a company/website match threshold.
-- Only public role-based email addresses on the matched company domain are retained.
+- Only public role-based corporate email addresses are retained.
+- Email-only leads require strong company/source evidence and are labelled `web_design`.
 - Personal webmail domains and named mailboxes are rejected by default.
 - The source page is stored in ClickUp.
 - The published privacy-notice URL is stored with every ClickUp review task.
 - Every lead task is visibly prefixed `[REVIEW REQUIRED]`.
 - Existing ClickUp company numbers are skipped.
-- Only manually approved (`completed`) ClickUp tasks can enter Instantly.
+- Only manually approved (`completed`) ClickUp tasks with the configured lead type can enter an Instantly campaign.
 
 ## Accounts and identifiers required
 
@@ -78,7 +79,7 @@ Each run writes `output/leads.csv` inside its temporary runner. The public GitHu
 
 This repository is public. Never commit API keys, `.env`, generated lead CSV files or exported ClickUp data.
 
-The workflow is scheduled at 07:00 Europe/London. GitHub schedules both possible UTC offsets and the application permits only the correct GMT/BST run.
+The workflow is scheduled for 07:00 Europe/London. GitHub schedules both possible UTC offsets, and the application accepts delayed delivery between 07:00 and 10:00 while ClickUp company-number deduplication prevents duplicate tasks.
 
 ## Targeting controls
 
@@ -91,6 +92,7 @@ Edit `config/targeting.yaml` to change:
 - Company-name and SIC exclusions
 - Allowed role-address prefixes
 - Blocked domains
+- Email-search depth for businesses without an official website
 - Firecrawl retry attempts and backoff
 - Privacy-notice URL included in each ClickUp task
 - Scheduled UK hour
@@ -106,6 +108,8 @@ DRY_RUN=true luminary-sync-approved --dry-run
 ```
 
 The sync uses Instantly API v2, the workspace blocklist and workspace-wide duplicate checking. A final outcome marker is appended to each processed ClickUp task so it cannot be imported repeatedly.
+
+The supplied AI Business Lab campaign is restricted to `lead_type: ai_business_lab`. Web-design opportunities remain in ClickUp until a separate Instantly campaign ID and sequence are configured.
 
 The `Sync approved leads to Instantly` workflow runs manually in dry-run mode by default. Its hourly schedule remains disabled until the repository variable `INSTANTLY_SYNC_ENABLED` is set to `true`. Enable that variable only after the campaign copy, sender accounts, schedule and unsubscribe handling are ready.
 
@@ -138,7 +142,7 @@ The supplied `stuart@stuartwesselby.com` address does not align with the stated 
 
 ## Known limitations
 
-- Companies may not have launched a website 14 days after incorporation.
+- Companies may not have launched a website 14 days after incorporation; the secondary public-email search can still create a separately labelled web-design opportunity.
 - Registered-office postcodes can point to accountants or formation agents.
 - SIC codes are self-reported and can be broad.
 - Website matching is deliberately conservative, so some valid companies will be skipped.
