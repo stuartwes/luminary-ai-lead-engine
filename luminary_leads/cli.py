@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -17,7 +17,15 @@ from .pipeline import LeadPipeline, write_csv
 def scheduled_window(config: dict, now: datetime | None = None) -> bool:
     timezone = ZoneInfo(config["schedule"]["timezone"])
     local_now = now.astimezone(timezone) if now else datetime.now(timezone)
-    return local_now.hour == int(config["schedule"]["local_hour"])
+    scheduled_for = local_now.replace(
+        hour=int(config["schedule"]["local_hour"]),
+        minute=0,
+        second=0,
+        microsecond=0,
+    )
+    delay = local_now - scheduled_for
+    tolerance = timedelta(hours=int(config["schedule"].get("delay_tolerance_hours", 3)))
+    return timedelta(0) <= delay <= tolerance
 
 
 def parse_args() -> argparse.Namespace:
@@ -30,7 +38,11 @@ def parse_args() -> argparse.Namespace:
         type=int,
         help="Override the configured lead cap for this run (useful for a small live pilot)",
     )
-    parser.add_argument("--scheduled", action="store_true", help="Exit unless this is the configured local hour")
+    parser.add_argument(
+        "--scheduled",
+        action="store_true",
+        help="Exit unless this is within the configured delayed-delivery window",
+    )
     return parser.parse_args()
 
 
@@ -44,7 +56,7 @@ def main() -> int:
         config["collection"]["max_approved_leads_per_run"] = args.max_leads
         logging.info("Lead cap overridden for this run: %d", args.max_leads)
     if args.scheduled and not scheduled_window(config):
-        logging.info("Outside the configured local run hour; exiting safely")
+        logging.info("Outside the configured delayed-delivery window; exiting safely")
         return 0
 
     env_dry_run = os.getenv("DRY_RUN", "true").casefold() not in {"false", "0", "no"}
