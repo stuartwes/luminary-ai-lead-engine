@@ -1,0 +1,150 @@
+schedule:
+  # Sunbiz creates files on Florida work days. 16:00 UTC is late morning/noon
+  # in Florida, and the downloader safely falls back to the latest prior file.
+  cron_utc: "0 16 * * 1-5"
+
+sunbiz:
+  host: sftp.floridados.gov
+  username: Public
+  # Password defaults to the public credential published by Florida DOS and can
+  # be overridden with FLORIDA_SUNBIZ_PASSWORD if the state changes it.
+  lookback_days: 10
+  transport_order: [sftp, ftps, https]
+  connect_timeout_seconds: 20
+  https_timeout_seconds: 45
+
+collection:
+  # Domestic profit corporations and Florida LLCs only. Foreign registrations,
+  # nonprofits, partnerships, trusts and registered-agent records are excluded.
+  filing_types: [DOMP, FLAL]
+  new_company_max_age_days: 10
+  max_candidates_per_run: 300
+  max_review_leads_per_run: 50
+
+targeting:
+  industry_name_terms:
+    consultancy:
+      - consult
+      - advisory
+      - advisor
+      - strategy
+      - coaching
+    training:
+      - training
+      - academy
+      - learning
+      - education
+      - workshop
+    marketing:
+      - marketing
+      - advertising
+      - branding
+      - creative
+      - media
+      - digital
+      - seo
+      - social
+    professional_services:
+      - accounting
+      - bookkeeping
+      - legal
+      - law
+      - architect
+      - engineering
+      - financial
+      - insurance
+      - design
+    recruitment:
+      - recruitment
+      - recruiting
+      - staffing
+      - talent
+      - workforce
+      - employment
+    trades:
+      - construction
+      - contractor
+      - electrical
+      - plumbing
+      - roofing
+      - hvac
+      - air conditioning
+      - landscaping
+      - painting
+      - carpentry
+      - remodeling
+      - handyman
+      - cleaning
+    online_business:
+      - online
+      - ecommerce
+      - e-commerce
+      - web
+      - software
+      - technology
+      - app
+  company_name_terms:
+    - registered agent
+    - filing services
+    - resident agent
+    - holdings
+    - property investment
+    - real estate investment
+    - homeowners association
+    - condominium association
+
+enrichment:
+  search_country: US
+  search_location: Florida,United States
+  scrape_country: US
+  scrape_languages: [en-US]
+  search_results: 6
+  email_search_results_without_website: 10
+  pages_per_site: 4
+  retry_attempts: 3
+  retry_backoff_seconds: 2
+  allowed_email_prefixes:
+    - hello
+    - info
+    - contact
+    - enquiries
+    - enquiry
+    - office
+    - admin
+    - team
+    - sales
+  blocked_email_domains:
+    - gmail.com
+    - outlook.com
+    - hotmail.com
+    - live.com
+    - yahoo.com
+    - icloud.com
+    - aol.com
+  blocked_website_domains: &blocked_sources
+    - sunbiz.org
+    - dos.fl.gov
+    - floridados.gov
+    - opencorporates.com
+    - bizapedia.com
+    - corporationwiki.com
+    - companiesofusa.com
+    - linkedin.com
+    - facebook.com
+    - instagram.com
+    - x.com
+    - twitter.com
+  blocked_email_source_domains: *blocked_sources
+
+clickup:
+  task_name_prefix: "[REVIEW REQUIRED] Florida AI Lab lead"
+  web_design_task_name_prefix: "[REVIEW REQUIRED] Florida Web Design lead"
+  privacy_notice_url: "https://luminaryaibusiness.com/luminaryaibusiness-privacy.html"
+  market: US-FL
+  company_source: Florida Division of Corporations (Sunbiz daily corporate file)
+  website_lead_type: us_fl_ai_business_lab
+  no_website_lead_type: us_fl_web_design
+  website_suggested_offer: Free Luminary AI Business Lab community
+  no_website_suggested_offer: Luminary AI Web Design — new-business website design
+  website_offer_link: "Community: https://www.skool.com/luminaryai-business-lab-3937/about"
+  no_website_offer_link: "Web design: https://luminaryaiwebdesign.co.uk/"
