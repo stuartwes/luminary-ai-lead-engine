@@ -42,6 +42,7 @@ class InstantlyClient:
                         "registered_postcode": lead.postcode,
                         "email_source_url": lead.email_source_url,
                         "privacy_notice_url": lead.privacy_notice_url,
+                        "lead_type": lead.lead_type,
                     },
                 }
             ],
