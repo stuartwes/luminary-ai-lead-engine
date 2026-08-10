@@ -10,13 +10,34 @@ from .instantly import InstantlyClient
 
 
 LOGGER = logging.getLogger(__name__)
+CAMPAIGN_SECTIONS = {
+    "ai_business_lab": "instantly",
+    "web_design": "instantly_web_design",
+}
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Sync approved ClickUp leads to Instantly")
     parser.add_argument("--config", default="config/targeting.yaml")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--lead-type",
+        choices=tuple(CAMPAIGN_SECTIONS),
+        default="ai_business_lab",
+        help="ClickUp lead type and matching Instantly campaign to process",
+    )
     return parser.parse_args()
+
+
+def campaign_config(config: dict, lead_type: str) -> dict:
+    section = CAMPAIGN_SECTIONS[lead_type]
+    selected = config[section]
+    configured_type = selected.get("lead_type", lead_type)
+    if configured_type != lead_type:
+        raise ValueError(
+            f"Campaign section {section} is configured for {configured_type}, not {lead_type}"
+        )
+    return selected
 
 
 def main() -> int:
@@ -31,7 +52,7 @@ def main() -> int:
         secrets["CLICKUP_LIST_ID"],
         config["clickup"],
     )
-    instantly_config = config["instantly"]
+    instantly_config = campaign_config(config, args.lead_type)
     instantly = InstantlyClient(
         secrets["INSTANTLY_API_KEY"],
         instantly_config["campaign_id"],
@@ -42,7 +63,11 @@ def main() -> int:
         instantly_config["approved_clickup_status"],
         required_lead_type=instantly_config.get("lead_type", "ai_business_lab"),
     )
-    LOGGER.info("Found %d approved, unsynced ClickUp leads", len(leads))
+    LOGGER.info(
+        "Found %d approved, unsynced ClickUp leads for %s",
+        len(leads),
+        args.lead_type,
+    )
     processed = 0
     for lead in leads:
         if dry_run:
@@ -57,7 +82,12 @@ def main() -> int:
         except Exception:
             LOGGER.exception("Failed to sync %s (%s)", lead.company_name, lead.company_number)
 
-    LOGGER.info("Sync complete: %d processed; dry_run=%s", processed, dry_run)
+    LOGGER.info(
+        "Sync complete for %s: %d processed; dry_run=%s",
+        args.lead_type,
+        processed,
+        dry_run,
+    )
     return 0
 
 
