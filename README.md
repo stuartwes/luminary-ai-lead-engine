@@ -1,6 +1,6 @@
 # Luminary AI New Business Lead Engine
 
-This project finds recently incorporated UK corporate businesses, enriches them from public web sources, and creates human-review tasks in ClickUp. Leads with a matched company website are offered the AI Business Lab; companies with a verified public business email but no official website found are separated as Luminary AI Web Design opportunities. A separate approval-gated workflow can add completed AI Business Lab tasks to Instantly; campaign activation and email sending remain controlled in Instantly.
+This project finds recently incorporated UK corporate businesses, enriches them from public web sources, and creates human-review tasks in ClickUp. It also contains a separate Florida pilot sourced from the official Sunbiz daily corporate file. Leads with a matched company website are offered the AI Business Lab; companies with a verified public business email but no official website found are separated as Luminary AI Web Design opportunities. A separate approval-gated workflow can add completed UK tasks to Instantly; campaign activation and email sending remain controlled in Instantly.
 
 ## Safety model
 
@@ -17,6 +17,7 @@ This project finds recently incorporated UK corporate businesses, enriches them 
 - Every lead task is visibly prefixed `[REVIEW REQUIRED]`.
 - Existing ClickUp company numbers are skipped.
 - Only manually approved (`completed`) ClickUp tasks with the configured lead type can enter an Instantly campaign.
+- Florida tasks use distinct `us_fl_*` lead types and cannot enter either UK Instantly campaign.
 
 ## Accounts and identifiers required
 
@@ -82,6 +83,20 @@ Each run writes `output/leads.csv` inside its temporary runner. The public GitHu
 This repository is public. Never commit API keys, `.env`, generated lead CSV files or exported ClickUp data.
 
 The workflow is scheduled for 07:00 Europe/London. GitHub schedules both possible UTC offsets, and the application accepts delayed delivery between 07:00 and 10:00 while ClickUp company-number deduplication prevents duplicate tasks.
+
+## Florida pilot
+
+The `Florida new-business pilot` workflow downloads Florida Division of Corporations daily corporate data from the state's public Sunbiz file service. It accepts newly formed active Florida LLCs (`FLAL`) and domestic profit corporations (`DOMP`), applies business-name signals for the configured target sectors, then uses the same conservative Firecrawl website/email matching and ClickUp review process.
+
+Sunbiz does not provide NAICS industry codes in this daily file, so Florida targeting is based on explicit terms in the legal business name. The run caps output at 50 email-qualified tasks and may produce fewer rather than admitting weak matches. Registry, filing-service and directory domains are blocked. Sunbiz document numbers are stored with a `USFL` prefix to prevent collisions with UK company numbers.
+
+The scheduled pilot runs at 16:00 UTC Monday-Friday and falls back through the last 10 days for the latest available Florida work-day file. Manual runs default to dry-run mode and two leads:
+
+```bash
+DRY_RUN=true luminary-florida-leads --dry-run --max-leads 2
+```
+
+Florida leads remain ClickUp-review-only. Before any US sending is enabled, create separate US Instantly campaigns and confirm CAN-SPAM controls, including accurate sender details, a valid physical postal address, and a working opt-out. Do not reuse the UK campaign IDs for Florida leads.
 
 ## Targeting controls
 
