@@ -98,6 +98,11 @@ DRY_RUN=true luminary-florida-leads --dry-run --max-leads 2
 
 Florida leads remain ClickUp-review-only. Before any US sending is enabled, create separate US Instantly campaigns and confirm CAN-SPAM controls, including accurate sender details, a valid physical postal address, and a working opt-out. Do not reuse the UK campaign IDs for Florida leads.
 
+Florida Firecrawl requests are deliberately paced. HTTP 429 responses honour
+Firecrawl's `Retry-After` header and otherwise use a longer exponential backoff,
+jitter and a maximum wait. This prevents a temporary plan limit from causing the
+pipeline to skip through hundreds of otherwise suitable companies.
+
 ## Targeting controls
 
 Edit `config/targeting.yaml` to change:
