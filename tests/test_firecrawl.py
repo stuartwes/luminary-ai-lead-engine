@@ -90,6 +90,7 @@ class SequencedSession:
 
     def post(self, *args, **kwargs):
         self.calls += 1
+        self.last_json = kwargs.get("json")
         return next(self.responses)
 
 
@@ -126,3 +127,28 @@ def test_does_not_retry_non_transient_firecrawl_errors():
         raise AssertionError("Expected Firecrawl HTTP error")
 
     assert session.calls == 1
+
+
+def test_search_uses_configured_us_market():
+    session = SequencedSession([FakeResponse(200, {"data": {"web": []}})])
+    client = FirecrawlClient(
+        "test",
+        {
+            **CONFIG,
+            "search_country": "US",
+            "search_location": "Florida,United States",
+        },
+        session=session,
+    )
+    company = Company(
+        "USFLL26000123456",
+        "Bright Marketing LLC",
+        "2026-08-07",
+        "FLAL",
+        "A",
+        address={"postal_code": "33101"},
+    )
+
+    assert client._discover_website(company) is None
+    assert session.last_json["country"] == "US"
+    assert session.last_json["location"] == "Florida,United States"
