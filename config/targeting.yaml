@@ -1,6 +1,10 @@
 schedule:
   timezone: Europe/London
   local_hour: 7
+  # GitHub scheduled events can arrive late. Accept the first event delivered
+  # between 07:00 and 10:00 local time; ClickUp company-number deduplication
+  # makes a second accepted GMT/BST event a safe no-op for existing leads.
+  delay_tolerance_hours: 3
 
 collection:
   # Each company is considered once, exactly 14 days after incorporation.
