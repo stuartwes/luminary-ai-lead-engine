@@ -16,6 +16,13 @@ EMAIL_RE = re.compile(r"(?i)(?<![\w.+-])([a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9-]
 GENERIC_COMPANY_WORDS = {"limited", "ltd", "llp", "uk", "group", "services", "solutions", "company", "co"}
 LOGGER = logging.getLogger(__name__)
 RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
+REGISTRY_CUES = {
+    "registry code",
+    "registered address",
+    "registration information",
+    "company status",
+    "company number",
+}
 
 
 @dataclass(slots=True)
@@ -116,6 +123,14 @@ class FirecrawlClient:
                 str(item.get(key) or "")
                 for key in ("title", "description", "markdown")
             )
+            result = SearchResult(
+                url=source_url,
+                title=str(item.get("title") or ""),
+                description=str(item.get("description") or ""),
+                markdown=str(item.get("markdown") or ""),
+            )
+            if self._looks_like_registry_listing(company, result):
+                continue
             score = self._match_score(company, source_url, source_text)
             if score < 60:
                 continue
@@ -178,7 +193,13 @@ class FirecrawlClient:
             for item in items
             if isinstance(item, dict) and item.get("url")
         ]
-        allowed = [item for item in results if not self._website_blocked(item.url)]
+        allowed = [
+            item
+            for item in results
+            if not self._website_blocked(item.url)
+            and not self._looks_like_registry_listing(company, item)
+            and self._domain_matches_company(company, item.url)
+        ]
         if not allowed:
             return None
         ranked = sorted(allowed, key=lambda item: self._match_score(company, item.url, item.title, item.description), reverse=True)
@@ -247,7 +268,30 @@ class FirecrawlClient:
         domain_matches_company = any(
             token in domain_text for token in self._company_tokens(company.name)
         )
-        return domain_matches_company or source_score >= 85
+        return domain_matches_company
+
+    def _domain_matches_company(self, company: Company, url: str) -> bool:
+        domain_text = self._root_domain(urlparse(url).netloc).split(".", 1)[0]
+        return any(
+            token in domain_text for token in self._company_tokens(company.name)
+        )
+
+    @staticmethod
+    def _looks_like_registry_listing(company: Company, result: SearchResult) -> bool:
+        path = urlparse(result.url).path.casefold()
+        text = " ".join(
+            (result.title, result.description, result.markdown)
+        ).casefold()
+        company_number = re.sub(r"[^a-z0-9]", "", company.company_number.casefold())
+        compact_path = re.sub(r"[^a-z0-9]", "", path)
+        registry_path = bool(
+            re.search(r"/(?:company|companies|business)/(?:uk/)?[a-z0-9]*\d", path)
+        )
+        number_reproduced = bool(company_number) and (
+            company_number in compact_path or company_number in re.sub(r"[^a-z0-9]", "", text)
+        )
+        cue_count = sum(cue in text for cue in REGISTRY_CUES)
+        return registry_path or (number_reproduced and cue_count >= 2)
 
     def _email_source_blocked(self, url: str) -> bool:
         domain = urlparse(url).netloc.casefold().removeprefix("www.")
