@@ -145,6 +145,12 @@ enrichment:
     - twitter.com
     - endole.co.uk
     - companycheck.co.uk
+    - jars.lt
+    - opencorporates.com
+    - companiesintheuk.co.uk
+    - bizstats.co.uk
+    - identeco.co.uk
+    - thegazette.co.uk
   # These sources are not accepted as evidence for a no-website email lead.
   blocked_email_source_domains:
     - companieshouse.gov.uk
@@ -156,6 +162,12 @@ enrichment:
     - twitter.com
     - endole.co.uk
     - companycheck.co.uk
+    - jars.lt
+    - opencorporates.com
+    - companiesintheuk.co.uk
+    - bizstats.co.uk
+    - identeco.co.uk
+    - thegazette.co.uk
 
 clickup:
   task_name_prefix: "[REVIEW REQUIRED] AI Lab lead"
@@ -169,6 +181,15 @@ instantly:
   lead_type: ai_business_lab
   skip_if_in_workspace: true
   verify_leads_on_import: false
+  blocked_lead_domains: &blocked_lead_domains
+    - jars.lt
+    - opencorporates.com
+    - companiesintheuk.co.uk
+    - bizstats.co.uk
+    - identeco.co.uk
+    - companycheck.co.uk
+    - endole.co.uk
+    - thegazette.co.uk
 
 instantly_web_design:
   campaign_id: "710418a9-9951-4bf1-9576-957dedeadab9"
@@ -176,3 +197,4 @@ instantly_web_design:
   lead_type: web_design
   skip_if_in_workspace: true
   verify_leads_on_import: false
+  blocked_lead_domains: *blocked_lead_domains
