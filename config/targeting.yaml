@@ -169,3 +169,10 @@ instantly:
   lead_type: ai_business_lab
   skip_if_in_workspace: true
   verify_leads_on_import: false
+
+instantly_web_design:
+  campaign_id: "710418a9-9951-4bf1-9576-957dedeadab9"
+  approved_clickup_status: completed
+  lead_type: web_design
+  skip_if_in_workspace: true
+  verify_leads_on_import: false
