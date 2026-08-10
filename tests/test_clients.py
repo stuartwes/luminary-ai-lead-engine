@@ -125,3 +125,62 @@ def test_clickup_sync_marker_prevents_duplicate_processing():
     )
 
     assert client.approved_leads("completed") == []
+
+
+def test_web_design_lead_is_labelled_and_excluded_from_ai_campaign():
+    company = Company(
+        "87654321",
+        "New Trade Ltd",
+        "2026-07-20",
+        "ltd",
+        "active",
+        ["43210"],
+        {"postal_code": "SS1 1AA"},
+    )
+    lead = EnrichedLead(
+        company,
+        "",
+        "info@newtrade.co.uk",
+        "https://directory.example/new-trade",
+        "trades",
+        85,
+    )
+    client = ClickUpClient(
+        "secret",
+        "list-id",
+        {
+            "task_name_prefix": "[REVIEW REQUIRED] AI Lab lead",
+            "web_design_task_name_prefix": "[REVIEW REQUIRED] Web Design lead",
+            "privacy_notice_url": "https://example.com/privacy",
+        },
+    )
+
+    payload = client.create_review_task(lead, dry_run=True)["payload"]
+
+    assert payload["name"].startswith("[REVIEW REQUIRED] Web Design lead")
+    assert "Lead type: web_design" in payload["description"]
+    assert "Website: No website found" in payload["description"]
+    assert "Luminary AI Web Design" in payload["description"]
+
+
+def test_ai_campaign_filter_skips_completed_web_design_lead():
+    session = FakeSession({
+        "tasks": [{
+            "id": "task-web",
+            "name": "[REVIEW REQUIRED] Web Design lead: New Trade Ltd [87654321]",
+            "description": """Company number: 87654321
+Lead type: web_design
+""",
+            "status": {"status": "completed"},
+        }]
+    })
+    client = ClickUpClient(
+        "secret",
+        "list-id",
+        {"task_name_prefix": "[REVIEW REQUIRED] AI Lab lead", "privacy_notice_url": "x"},
+        session=session,
+    )
+
+    assert client.approved_leads(
+        "completed", required_lead_type="ai_business_lab"
+    ) == []
