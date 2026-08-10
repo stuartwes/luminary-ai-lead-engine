@@ -44,8 +44,13 @@ class ClickUpClient:
 
     def create_review_task(self, lead: EnrichedLead, *, dry_run: bool = False) -> dict:
         description = self._description(lead)
+        prefix = (
+            self.config.get("web_design_task_name_prefix", "[REVIEW REQUIRED] Web Design lead")
+            if not lead.website
+            else self.config["task_name_prefix"]
+        )
         payload = {
-            "name": f'{self.config["task_name_prefix"]}: {lead.company.name} [{lead.company.company_number}]',
+            "name": f"{prefix}: {lead.company.name} [{lead.company.company_number}]",
             "description": description,
             "notify_all": False,
         }
@@ -60,7 +65,9 @@ class ClickUpClient:
         response.raise_for_status()
         return response.json()
 
-    def approved_leads(self, status: str) -> list[ApprovedLead]:
+    def approved_leads(
+        self, status: str, required_lead_type: str | None = None
+    ) -> list[ApprovedLead]:
         page = 0
         leads: list[ApprovedLead] = []
         while True:
@@ -81,6 +88,12 @@ class ClickUpClient:
                 task_status = str((task.get("status") or {}).get("status") or "")
                 description = str(task.get("description") or "")
                 if task_status.casefold() != status.casefold() or INSTANTLY_SYNC_MARKER in description:
+                    continue
+                lead_type = (
+                    self._field(description, "Lead type", required=False)
+                    or "ai_business_lab"
+                )
+                if required_lead_type and lead_type.casefold() != required_lead_type.casefold():
                     continue
                 leads.append(self._approved_lead(task))
             if len(tasks) < 100:
@@ -104,8 +117,13 @@ class ClickUpClient:
     def _approved_lead(self, task: dict) -> ApprovedLead:
         description = str(task.get("description") or "")
         company_number = self._field(description, "Company number")
-        prefix = f'{self.config["task_name_prefix"]}:'
-        company_name = str(task.get("name") or "").removeprefix(prefix).strip()
+        prefixes = (
+            self.config["task_name_prefix"],
+            self.config.get("web_design_task_name_prefix", "[REVIEW REQUIRED] Web Design lead"),
+        )
+        company_name = str(task.get("name") or "").strip()
+        for task_prefix in prefixes:
+            company_name = company_name.removeprefix(f"{task_prefix}:").strip()
         company_name = re.sub(
             rf"\s*\[{re.escape(company_number)}\]\s*$", "", company_name
         ).strip()
@@ -117,12 +135,20 @@ class ClickUpClient:
             incorporated_on=self._field(description, "Incorporated"),
             industry=self._field(description, "Industry segment"),
             postcode=self._field(description, "Registered postcode"),
-            website=self._field(description, "Website"),
+            website=(
+                ""
+                if self._field(description, "Website").casefold() == "no website found"
+                else self._field(description, "Website")
+            ),
             email=self._field(description, "Public corporate email").lower(),
             email_source_url=self._field(description, "Email source"),
             privacy_notice_url=(
                 self._field(description, "Privacy notice", required=False)
                 or str(self.config["privacy_notice_url"])
+            ),
+            lead_type=(
+                self._field(description, "Lead type", required=False)
+                or "ai_business_lab"
             ),
         )
 
@@ -138,6 +164,13 @@ class ClickUpClient:
     def _description(self, lead: EnrichedLead) -> str:
         company = lead.company
         privacy_notice_url = self.config["privacy_notice_url"]
+        lead_type = "ai_business_lab" if lead.website else "web_design"
+        website = lead.website or "No website found"
+        suggested_offer = (
+            "Free New Business AI Launch Plan leading to the Luminary AI Business Lab"
+            if lead.website
+            else "Luminary AI Web Design — new-business website design"
+        )
         return f"""## Review before outreach
 
 Company number: {company.company_number}
@@ -145,8 +178,9 @@ Incorporated: {company.incorporated_on}
 Industry segment: {lead.industry}
 SIC codes: {', '.join(company.sic_codes)}
 Registered postcode: {company.postcode}
+Lead type: {lead_type}
 
-Website: {lead.website}
+Website: {website}
 Public corporate email: {lead.email}
 Email source: {lead.email_source_url}
 Match confidence: {lead.confidence}/100
@@ -160,6 +194,6 @@ Compliance controls:
 
 Privacy notice: {privacy_notice_url}
 
-Suggested offer: Free New Business AI Launch Plan leading to the Luminary AI Business Lab
-Community: https://www.skool.com/luminaryai-business-lab-3937/about
+Suggested offer: {suggested_offer}
+{("Community: https://www.skool.com/luminaryai-business-lab-3937/about" if lead.website else "Web design: https://luminaryaiwebdesign.co.uk/")}
 """
