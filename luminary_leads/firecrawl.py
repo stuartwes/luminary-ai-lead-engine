@@ -13,7 +13,10 @@ from .models import Company, EnrichedLead
 
 
 EMAIL_RE = re.compile(r"(?i)(?<![\w.+-])([a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)+)")
-GENERIC_COMPANY_WORDS = {"limited", "ltd", "llp", "uk", "group", "services", "solutions", "company", "co"}
+GENERIC_COMPANY_WORDS = {
+    "limited", "ltd", "llp", "llc", "inc", "corporation", "corp", "florida",
+    "uk", "usa", "group", "services", "solutions", "company", "co",
+}
 LOGGER = logging.getLogger(__name__)
 RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
 REGISTRY_CUES = {
@@ -104,8 +107,10 @@ class FirecrawlClient:
             "query": query,
             "limit": int(self.config.get("email_search_results_without_website", 8)),
             "sources": ["web"],
-            "country": "UK",
-            "location": "London,England,United Kingdom",
+            "country": self.config.get("search_country", "UK"),
+            "location": self.config.get(
+                "search_location", "London,England,United Kingdom"
+            ),
             "safe": True,
             "ignoreInvalidURLs": True,
         }
@@ -176,8 +181,10 @@ class FirecrawlClient:
             "query": query,
             "limit": int(self.config["search_results"]),
             "sources": ["web"],
-            "country": "UK",
-            "location": "London,England,United Kingdom",
+            "country": self.config.get("search_country", "UK"),
+            "location": self.config.get(
+                "search_location", "London,England,United Kingdom"
+            ),
             "safe": True,
             "ignoreInvalidURLs": True,
         }
@@ -212,7 +219,10 @@ class FirecrawlClient:
             "formats": ["markdown", "html", "links"],
             "onlyMainContent": False,
             "blockAds": True,
-            "location": {"country": "GB", "languages": ["en-GB"]},
+            "location": {
+                "country": self.config.get("scrape_country", "GB"),
+                "languages": self.config.get("scrape_languages", ["en-GB"]),
+            },
             "timeout": 45000,
         }
         return self._post_json("scrape", payload).get("data") or {}
