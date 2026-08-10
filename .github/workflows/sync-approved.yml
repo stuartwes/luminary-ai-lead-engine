@@ -18,8 +18,12 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || vars.INSTANTLY_SYNC_ENABLED == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        lead_type: [ai_business_lab, web_design]
     concurrency:
-      group: luminary-instantly-sync
+      group: luminary-instantly-sync-${{ matrix.lead_type }}
       cancel-in-progress: false
     env:
       CLICKUP_API_TOKEN: ${{ secrets.CLICK_UP_TOKEN }}
@@ -38,5 +42,5 @@ jobs:
       - name: Install
         run: pip install .
 
-      - name: Sync completed ClickUp leads
-        run: luminary-sync-approved
+      - name: Sync completed ClickUp leads (${{ matrix.lead_type }})
+        run: luminary-sync-approved --lead-type "${{ matrix.lead_type }}"
