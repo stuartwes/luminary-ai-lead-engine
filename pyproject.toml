@@ -5,11 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "luminary-ai-lead-engine"
 version = "0.1.0"
-description = "Compliant UK new-business lead discovery for Luminary AI Business Lab"
+description = "Compliant UK and Florida new-business lead discovery for Luminary AI Business Lab"
 requires-python = ">=3.11"
 dependencies = [
   "PyYAML==6.0.2",
   "requests==2.32.4",
+  "paramiko==3.5.1",
 ]
 
 [project.optional-dependencies]
@@ -17,6 +18,7 @@ test = ["pytest==8.4.1"]
 
 [project.scripts]
 luminary-leads = "luminary_leads.cli:main"
+luminary-florida-leads = "luminary_leads.florida_cli:main"
 luminary-sync-approved = "luminary_leads.sync_cli:main"
 
 [tool.setuptools.packages.find]
