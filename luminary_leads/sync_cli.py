@@ -69,7 +69,28 @@ def main() -> int:
         args.lead_type,
     )
     processed = 0
+    blocked = 0
     for lead in leads:
+        blocked_domain = instantly.blocked_lead_domain(lead)
+        if blocked_domain:
+            outcome = f"blocked unsafe registry/source domain: {blocked_domain}"
+            if dry_run:
+                LOGGER.warning(
+                    "Dry run: would block %s (%s): %s",
+                    lead.company_name,
+                    lead.company_number,
+                    outcome,
+                )
+            else:
+                clickup.mark_instantly_synced(lead, outcome, instantly.campaign_id)
+                LOGGER.warning(
+                    "Blocked %s (%s): %s",
+                    lead.company_name,
+                    lead.company_number,
+                    outcome,
+                )
+            blocked += 1
+            continue
         if dry_run:
             LOGGER.info("Dry run: would import %s (%s)", lead.company_name, lead.company_number)
             continue
@@ -83,9 +104,10 @@ def main() -> int:
             LOGGER.exception("Failed to sync %s (%s)", lead.company_name, lead.company_number)
 
     LOGGER.info(
-        "Sync complete for %s: %d processed; dry_run=%s",
+        "Sync complete for %s: %d processed; %d blocked; dry_run=%s",
         args.lead_type,
         processed,
+        blocked,
         dry_run,
     )
     return 0
