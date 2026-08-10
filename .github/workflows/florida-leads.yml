@@ -1,0 +1,58 @@
+name: Florida new-business pilot
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run without writing ClickUp tasks"
+        type: boolean
+        default: true
+      max_leads:
+        description: "Maximum review-ready Florida leads"
+        type: number
+        default: 2
+      source_date:
+        description: "Optional YYYY-MM-DD date to start Sunbiz lookback from"
+        type: string
+        required: false
+  schedule:
+    # 12:00 Florida during daylight saving, 11:00 during standard time.
+    # The downloader uses the latest available work-day file if today's is late.
+    - cron: "0 16 * * 1-5"
+
+permissions:
+  contents: read
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    concurrency:
+      group: luminary-florida-leads
+      cancel-in-progress: false
+    env:
+      FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API }}
+      CLICKUP_API_TOKEN: ${{ secrets.CLICK_UP_TOKEN }}
+      CLICKUP_LIST_ID: ${{ secrets.CLICKUP_LIST_ID }}
+      FLORIDA_SUNBIZ_PASSWORD: ${{ secrets.FLORIDA_SUNBIZ_PASSWORD }}
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: pip install .
+
+      - name: Collect and enrich Florida leads
+        shell: bash
+        run: |
+          args=(--max-leads "${{ github.event_name == 'workflow_dispatch' && inputs.max_leads || 50 }}")
+          if [ -n "${{ inputs.source_date }}" ]; then
+            args+=(--source-date "${{ inputs.source_date }}")
+          fi
+          luminary-florida-leads "${args[@]}"
