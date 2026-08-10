@@ -184,3 +184,39 @@ Lead type: web_design
     assert client.approved_leads(
         "completed", required_lead_type="ai_business_lab"
     ) == []
+
+
+def test_florida_task_uses_isolated_us_lead_type_and_compliance_note():
+    company = Company(
+        "USFLL26000123456",
+        "Bright Marketing LLC",
+        "2026-08-07",
+        "FLAL",
+        "A",
+        address={"postal_code": "33101"},
+    )
+    lead = EnrichedLead(
+        company,
+        "https://brightmarketing.com",
+        "hello@brightmarketing.com",
+        "https://brightmarketing.com/contact",
+        "marketing",
+        85,
+    )
+    client = ClickUpClient(
+        "secret",
+        "list-id",
+        {
+            "task_name_prefix": "[REVIEW REQUIRED] Florida AI Lab lead",
+            "privacy_notice_url": "https://example.com/privacy",
+            "market": "US-FL",
+            "company_source": "Florida Sunbiz",
+            "website_lead_type": "us_fl_ai_business_lab",
+        },
+    )
+
+    payload = client.create_review_task(lead, dry_run=True)["payload"]
+
+    assert "Lead type: us_fl_ai_business_lab" in payload["description"]
+    assert "Market: US-FL" in payload["description"]
+    assert "physical postal address and working opt-out" in payload["description"]
