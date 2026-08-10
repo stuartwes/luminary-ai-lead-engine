@@ -41,3 +41,4 @@ class ApprovedLead:
     email: str
     email_source_url: str
     privacy_notice_url: str
+    lead_type: str = "ai_business_lab"
