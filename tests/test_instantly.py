@@ -80,3 +80,23 @@ def test_campaign_config_routes_each_lead_type_separately():
 
     assert campaign_config(config, "ai_business_lab")["campaign_id"] == "ai-campaign"
     assert campaign_config(config, "web_design")["campaign_id"] == "web-campaign"
+
+
+def test_registry_domain_is_blocked_before_instantly_upload():
+    lead = approved_lead()
+    lead.website = "https://jars.lt/en/company/uk/12345678-bright-agency"
+    lead.email = "info@jars.lt"
+    client = InstantlyClient(
+        "secret",
+        "campaign-1",
+        {"blocked_lead_domains": ["jars.lt"]},
+        session=FakeSession({"leads_uploaded": 1}),
+    )
+
+    assert client.blocked_lead_domain(lead) == "jars.lt"
+    try:
+        client.add_lead(lead)
+    except ValueError as exc:
+        assert "jars.lt" in str(exc)
+    else:
+        raise AssertionError("Expected blocked registry-domain lead")
