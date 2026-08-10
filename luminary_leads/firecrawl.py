@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import random
 import time
 from dataclasses import dataclass
 import logging
@@ -18,7 +19,7 @@ GENERIC_COMPANY_WORDS = {
     "uk", "usa", "group", "services", "solutions", "company", "co",
 }
 LOGGER = logging.getLogger(__name__)
-RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
+RETRYABLE_STATUS_CODES = {408, 429, 500, 502, 503, 504}
 REGISTRY_CUES = {
     "registry code",
     "registered address",
@@ -45,11 +46,16 @@ class FirecrawlClient:
         enrichment_config: dict,
         session: requests.Session | None = None,
         sleep: Callable[[float], None] = time.sleep,
+        clock: Callable[[], float] = time.monotonic,
+        random_fn: Callable[[], float] = random.random,
     ) -> None:
         self.api_key = api_key
         self.config = enrichment_config
         self.session = session or requests.Session()
         self.sleep = sleep
+        self.clock = clock
+        self.random_fn = random_fn
+        self._next_request_at = 0.0
 
     @property
     def headers(self) -> dict[str, str]:
@@ -229,11 +235,23 @@ class FirecrawlClient:
 
     def _post_json(self, endpoint: str, payload: dict) -> dict:
         attempts = max(1, int(self.config.get("retry_attempts", 3)))
+        rate_limit_attempts = max(
+            attempts, int(self.config.get("rate_limit_retry_attempts", attempts))
+        )
         backoff = max(0.0, float(self.config.get("retry_backoff_seconds", 2)))
+        rate_limit_backoff = max(
+            0.0, float(self.config.get("rate_limit_backoff_seconds", backoff))
+        )
+        max_rate_limit_wait = max(
+            rate_limit_backoff,
+            float(self.config.get("rate_limit_max_wait_seconds", 60)),
+        )
+        jitter = max(0.0, float(self.config.get("retry_jitter_seconds", 1)))
         url = f"{self.BASE_URL}/{endpoint}"
 
-        for attempt in range(1, attempts + 1):
+        for attempt in range(1, rate_limit_attempts + 1):
             try:
+                self._pace_requests()
                 response = self.session.post(
                     url, headers=self.headers, json=payload, timeout=60
                 )
@@ -241,21 +259,59 @@ class FirecrawlClient:
                 return response.json()
             except requests.RequestException as exc:
                 status = exc.response.status_code if exc.response is not None else None
+                allowed_attempts = rate_limit_attempts if status == 429 else attempts
                 retryable = status is None or status in RETRYABLE_STATUS_CODES
-                if not retryable or attempt == attempts:
+                if not retryable or attempt >= allowed_attempts:
                     raise
-                delay = backoff * (2 ** (attempt - 1))
+                if status == 429:
+                    retry_after = self._retry_after_seconds(exc.response)
+                    delay = (
+                        retry_after
+                        if retry_after is not None
+                        else min(
+                            rate_limit_backoff * (2 ** (attempt - 1)),
+                            max_rate_limit_wait,
+                        )
+                        + self.random_fn() * jitter
+                    )
+                else:
+                    delay = backoff * (2 ** (attempt - 1)) + self.random_fn() * jitter
                 LOGGER.warning(
                     "Firecrawl %s attempt %d/%d failed%s; retrying in %.1fs",
                     endpoint,
                     attempt,
-                    attempts,
+                    allowed_attempts,
                     f" with HTTP {status}" if status else "",
                     delay,
                 )
                 self.sleep(delay)
 
         raise RuntimeError("Firecrawl retry loop ended unexpectedly")
+
+    def _pace_requests(self) -> None:
+        interval = max(
+            0.0, float(self.config.get("minimum_request_interval_seconds", 0))
+        )
+        if interval == 0:
+            return
+        now = self.clock()
+        wait = max(0.0, self._next_request_at - now)
+        if wait:
+            self.sleep(wait)
+            now = self.clock()
+        self._next_request_at = max(now, self._next_request_at) + interval
+
+    @staticmethod
+    def _retry_after_seconds(response: requests.Response | None) -> float | None:
+        if response is None:
+            return None
+        value = str(getattr(response, "headers", {}).get("Retry-After", "")).strip()
+        if not value:
+            return None
+        try:
+            return max(0.0, float(value))
+        except ValueError:
+            return None
 
     def _email_allowed(self, email: str, website: str) -> bool:
         local, _, domain = email.lower().rpartition("@")
