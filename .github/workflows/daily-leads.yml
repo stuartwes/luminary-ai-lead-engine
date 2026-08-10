@@ -12,8 +12,8 @@ on:
         type: number
         default: 2
   schedule:
-    # Run at both possible 07:00 UK UTC offsets; the app's timezone gate
-    # ensures exactly one proceeds during GMT/BST.
+    # Run at both possible 07:00 UK UTC offsets. The app accepts delayed
+    # delivery and ClickUp company-number deduplication prevents duplicate tasks.
     - cron: "0 6 * * *"
     - cron: "0 7 * * *"
 
