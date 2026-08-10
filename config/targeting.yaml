@@ -111,6 +111,7 @@ exclusions:
 
 enrichment:
   search_results: 5
+  email_search_results_without_website: 8
   pages_per_site: 4
   # Retry temporary Firecrawl errors (rate limits and HTTP 5xx) with backoff.
   retry_attempts: 3
@@ -144,13 +145,27 @@ enrichment:
     - twitter.com
     - endole.co.uk
     - companycheck.co.uk
+  # These sources are not accepted as evidence for a no-website email lead.
+  blocked_email_source_domains:
+    - companieshouse.gov.uk
+    - company-information.service.gov.uk
+    - linkedin.com
+    - facebook.com
+    - instagram.com
+    - x.com
+    - twitter.com
+    - endole.co.uk
+    - companycheck.co.uk
 
 clickup:
   task_name_prefix: "[REVIEW REQUIRED] AI Lab lead"
+  web_design_task_name_prefix: "[REVIEW REQUIRED] Web Design lead"
   privacy_notice_url: "https://luminaryaibusiness.com/luminaryaibusiness-privacy.html"
 
 instantly:
   campaign_id: "92fb1fbd-92a1-4a07-b500-c4e1d5a38111"
   approved_clickup_status: completed
+  # Keep web-design opportunities out of this AI Business Lab campaign.
+  lead_type: ai_business_lab
   skip_if_in_workspace: true
   verify_leads_on_import: false
