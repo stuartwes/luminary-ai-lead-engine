@@ -109,7 +109,14 @@ DRY_RUN=true luminary-sync-approved --dry-run
 
 The sync uses Instantly API v2, the workspace blocklist and workspace-wide duplicate checking. A final outcome marker is appended to each processed ClickUp task so it cannot be imported repeatedly.
 
-The supplied AI Business Lab campaign is restricted to `lead_type: ai_business_lab`. Web-design opportunities remain in ClickUp until a separate Instantly campaign ID and sequence are configured.
+The AI Business Lab campaign is restricted to `lead_type: ai_business_lab`. The separate Luminary AI Web Design campaign is restricted to `lead_type: web_design`. The hourly workflow processes both routes independently, so approving one type cannot place it into the other campaign.
+
+Run either route locally with:
+
+```bash
+luminary-sync-approved --lead-type ai_business_lab
+luminary-sync-approved --lead-type web_design
+```
 
 The `Sync approved leads to Instantly` workflow runs manually in dry-run mode by default. Its hourly schedule remains disabled until the repository variable `INSTANTLY_SYNC_ENABLED` is set to `true`. Enable that variable only after the campaign copy, sender accounts, schedule and unsubscribe handling are ready.
 
