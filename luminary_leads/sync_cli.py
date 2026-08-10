@@ -38,7 +38,10 @@ def main() -> int:
         instantly_config,
     )
 
-    leads = clickup.approved_leads(instantly_config["approved_clickup_status"])
+    leads = clickup.approved_leads(
+        instantly_config["approved_clickup_status"],
+        required_lead_type=instantly_config.get("lead_type", "ai_business_lab"),
+    )
     LOGGER.info("Found %d approved, unsynced ClickUp leads", len(leads))
     processed = 0
     for lead in leads:
