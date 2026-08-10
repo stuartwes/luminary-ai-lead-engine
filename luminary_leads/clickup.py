@@ -164,19 +164,44 @@ class ClickUpClient:
     def _description(self, lead: EnrichedLead) -> str:
         company = lead.company
         privacy_notice_url = self.config["privacy_notice_url"]
-        lead_type = "ai_business_lab" if lead.website else "web_design"
+        lead_type = (
+            self.config.get("website_lead_type", "ai_business_lab")
+            if lead.website
+            else self.config.get("no_website_lead_type", "web_design")
+        )
         website = lead.website or "No website found"
         suggested_offer = (
-            "Free New Business AI Launch Plan leading to the Luminary AI Business Lab"
+            self.config.get(
+                "website_suggested_offer",
+                "Free New Business AI Launch Plan leading to the Luminary AI Business Lab",
+            )
             if lead.website
-            else "Luminary AI Web Design — new-business website design"
+            else self.config.get(
+                "no_website_suggested_offer",
+                "Luminary AI Web Design — new-business website design",
+            )
+        )
+        market = self.config.get("market", "UK")
+        source = self.config.get("company_source", "Companies House")
+        offer_link = (
+            self.config.get(
+                "website_offer_link",
+                "Community: https://www.skool.com/luminaryai-business-lab-3937/about",
+            )
+            if lead.website
+            else self.config.get(
+                "no_website_offer_link",
+                "Web design: https://luminaryaiwebdesign.co.uk/",
+            )
         )
         return f"""## Review before outreach
 
 Company number: {company.company_number}
 Incorporated: {company.incorporated_on}
+Market: {market}
+Company source: {source}
 Industry segment: {lead.industry}
-SIC codes: {', '.join(company.sic_codes)}
+SIC codes: {', '.join(company.sic_codes) or 'Not supplied by source'}
 Registered postcode: {company.postcode}
 Lead type: {lead_type}
 
@@ -191,9 +216,10 @@ Compliance controls:
 - Corporate body must be confirmed before sending
 - Check the suppression list
 - Do not contact until this task is manually approved
+{('- US outreach must include an accurate sender identity, physical postal address and working opt-out' if market.startswith('US') else '')}
 
 Privacy notice: {privacy_notice_url}
 
 Suggested offer: {suggested_offer}
-{("Community: https://www.skool.com/luminaryai-business-lab-3937/about" if lead.website else "Web design: https://luminaryaiwebdesign.co.uk/")}
+{offer_link}
 """
