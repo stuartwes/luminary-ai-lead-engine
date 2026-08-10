@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
+from urllib.parse import urlparse
 
 import requests
 
@@ -26,6 +27,9 @@ class InstantlyClient:
         }
 
     def add_lead(self, lead: ApprovedLead) -> dict:
+        blocked_domain = self.blocked_lead_domain(lead)
+        if blocked_domain:
+            raise ValueError(f"Blocked registry/source domain: {blocked_domain}")
         payload = {
             "campaign_id": self.campaign_id,
             "verify_leads_on_import": bool(self.config.get("verify_leads_on_import", False)),
@@ -55,6 +59,22 @@ class InstantlyClient:
         )
         response.raise_for_status()
         return response.json()
+
+    def blocked_lead_domain(self, lead: ApprovedLead) -> str | None:
+        blocked = {
+            str(domain).casefold().removeprefix("www.")
+            for domain in self.config.get("blocked_lead_domains", [])
+        }
+        email_domain = lead.email.rpartition("@")[2].casefold().removeprefix("www.")
+        candidates = [email_domain]
+        for url in (lead.website, lead.email_source_url):
+            if url:
+                candidates.append(urlparse(url).netloc.casefold().removeprefix("www."))
+        for candidate in candidates:
+            for blocked_domain in blocked:
+                if candidate == blocked_domain or candidate.endswith("." + blocked_domain):
+                    return blocked_domain
+        return None
 
     @staticmethod
     def outcome(result: dict) -> str:
