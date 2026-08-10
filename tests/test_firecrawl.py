@@ -27,6 +27,27 @@ def test_company_domain_match_scores_highly():
     assert client._match_score(company, "https://brightagency.co.uk") >= 60
 
 
+def test_role_email_can_qualify_without_a_website_when_company_match_is_strong():
+    company = Company(
+        "123",
+        "Bright Agency Limited",
+        "2026-07-01",
+        "ltd",
+        "active",
+        ["73110"],
+        {"postal_code": "SE1 2AA"},
+    )
+    client = FirecrawlClient("test", CONFIG)
+
+    assert client._email_allowed_without_website(
+        "hello@brightagency.co.uk", company, 70
+    )
+    assert not client._email_allowed_without_website(
+        "jane@brightagency.co.uk", company, 100
+    )
+    assert not client._email_allowed_without_website("hello@gmail.com", company, 100)
+
+
 class FakeResponse:
     def __init__(self, status_code, payload):
         self.status_code = status_code
