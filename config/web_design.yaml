@@ -75,7 +75,7 @@ enrichment:
 
 website_audit:
   pages_per_site: 4
-  minimum_opportunity_score: 50
+  minimum_opportunity_score: 40
   thin_homepage_word_count: 120
   premium_visual_sector: true
   diy_platforms: [Wix, Squarespace, Weebly, GoDaddy, IONOS]
