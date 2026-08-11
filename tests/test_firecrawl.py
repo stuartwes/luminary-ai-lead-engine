@@ -210,3 +210,37 @@ def test_search_uses_configured_us_market():
     assert client._discover_website(company) is None
     assert session.last_json["country"] == "US"
     assert session.last_json["location"] == "Florida,United States"
+
+
+def test_indexed_site_search_finds_only_same_domain_role_email():
+    session = SequencedSession([
+        FakeResponse(
+            200,
+            {
+                "data": {
+                    "web": [
+                        {
+                            "url": "https://brightagency.co.uk/contact",
+                            "title": "Contact Bright Agency",
+                            "description": "Email hello@brightagency.co.uk",
+                        },
+                        {
+                            "url": "https://directory.example/bright-agency",
+                            "description": "Email info@brightagency.co.uk",
+                        },
+                    ]
+                }
+            },
+        )
+    ])
+    client = FirecrawlClient("test", CONFIG, session=session)
+
+    result = client.discover_role_email_on_website(
+        "https://brightagency.co.uk", "Bright Agency", "SE1 2AA"
+    )
+
+    assert result == (
+        "hello@brightagency.co.uk",
+        "https://brightagency.co.uk/contact",
+    )
+    assert session.last_json["query"].startswith("site:brightagency.co.uk")

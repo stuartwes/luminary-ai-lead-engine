@@ -129,6 +129,16 @@ class WebsiteAuditClient:
                 if self.firecrawl.email_allowed(email, place.website):
                     email_candidates.append((email.lower(), url))
         if not email_candidates:
+            discovered_email = self.firecrawl.discover_role_email_on_website(
+                place.website, place.name, place.postcode
+            )
+            if discovered_email:
+                email_candidates.append(discovered_email)
+                LOGGER.info(
+                    "Found a public same-domain role email for %s through indexed-site search",
+                    place.name,
+                )
+        if not email_candidates:
             LOGGER.info(
                 "Skipped %s: no public role-based email found on the website domain",
                 place.name,

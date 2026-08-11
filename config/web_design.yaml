@@ -18,6 +18,7 @@ collection:
 enrichment:
   search_results: 5
   email_search_results_without_website: 8
+  email_search_results_on_site: 8
   pages_per_site: 4
   retry_attempts: 3
   retry_backoff_seconds: 2

@@ -243,6 +243,56 @@ class FirecrawlClient:
     def email_priority(self, email: str) -> tuple[int, str]:
         return self._email_priority(email)
 
+    def discover_role_email_on_website(
+        self, website: str, business_name: str, postcode: str
+    ) -> tuple[str, str] | None:
+        """Search indexed pages on a known business domain for a role address."""
+        domain = self._root_domain(urlparse(website).netloc)
+        payload = {
+            "query": f'site:{domain} "{business_name}" {postcode} email contact',
+            "limit": int(self.config.get("email_search_results_on_site", 8)),
+            "sources": ["web"],
+            "country": self.config.get("search_country", "UK"),
+            "location": self.config.get(
+                "search_location", "London,England,United Kingdom"
+            ),
+            "safe": True,
+            "ignoreInvalidURLs": True,
+        }
+        raw = self._post_json("search", payload).get("data") or {}
+        items = raw.get("web", []) if isinstance(raw, dict) else raw
+        candidates: list[tuple[str, str]] = []
+
+        for item in items:
+            if not isinstance(item, dict) or not item.get("url"):
+                continue
+            source_url = str(item["url"])
+            if not self._same_domain(website, source_url):
+                continue
+            source_text = "\n".join(
+                str(item.get(key) or "")
+                for key in ("title", "description", "markdown")
+            )
+            emails = EMAIL_RE.findall(source_text)
+            if not emails:
+                try:
+                    scraped = self._scrape(source_url)
+                except requests.RequestException:
+                    LOGGER.warning("Could not scrape indexed contact page %s", source_url)
+                    continue
+                source_text = "\n".join(
+                    str(scraped.get(key) or "")
+                    for key in ("markdown", "html", "rawHtml")
+                )
+                emails = EMAIL_RE.findall(source_text)
+            for email in emails:
+                if self._email_allowed(email, website):
+                    candidates.append((email.lower(), source_url))
+
+        if not candidates:
+            return None
+        return sorted(set(candidates), key=lambda item: self._email_priority(item[0]))[0]
+
     def _post_json(self, endpoint: str, payload: dict) -> dict:
         attempts = max(1, int(self.config.get("retry_attempts", 3)))
         rate_limit_attempts = max(
