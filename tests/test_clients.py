@@ -220,3 +220,98 @@ def test_florida_task_uses_isolated_us_lead_type_and_compliance_note():
     assert "Lead type: us_fl_ai_business_lab" in payload["description"]
     assert "Market: US-FL" in payload["description"]
     assert "physical postal address and working opt-out" in payload["description"]
+
+
+def test_weak_website_task_contains_specific_audit_evidence():
+    company = Company(
+        "12345678",
+        "Sevenoaks Garden Design Ltd",
+        "2018-01-01",
+        "ltd",
+        "active",
+        ["71112"],
+        {"postal_code": "TN13 1AA"},
+    )
+    lead = EnrichedLead(
+        company,
+        "https://sevenoaksgardens.co.uk",
+        "hello@sevenoaksgardens.co.uk",
+        "https://sevenoaksgardens.co.uk/contact",
+        "landscape_and_garden_design",
+        90,
+        lead_type="web_design_weak_site",
+        google_place_id="place-1",
+        google_maps_url="https://maps.google.com/example",
+        google_rating=4.8,
+        google_review_count=65,
+        website_platform="Wix",
+        opportunity_score=75,
+        primary_issue="No project portfolio detected",
+        audit_signals=["No project gallery detected"],
+    )
+    client = ClickUpClient(
+        "secret",
+        "list-id",
+        {
+            "task_name_prefix": "[REVIEW REQUIRED] Web Design Audit",
+            "web_design_task_name_prefix": "[REVIEW REQUIRED] Web Design Audit",
+            "privacy_notice_url": "https://example.com/privacy",
+        },
+    )
+
+    payload = client.create_review_task(lead, dry_run=True)["payload"]
+
+    assert payload["name"].startswith("[REVIEW REQUIRED] Web Design Audit")
+    assert "Lead type: web_design_weak_site" in payload["description"]
+    assert "Opportunity score: 75/100" in payload["description"]
+    assert "Website platform: Wix" in payload["description"]
+    assert "Google review count: 65" in payload["description"]
+
+
+def test_clickup_parses_weak_site_fields_for_instantly_personalisation():
+    session = FakeSession(
+        {
+            "tasks": [
+                {
+                    "id": "task-weak",
+                    "name": "[REVIEW REQUIRED] Web Design Audit: Sevenoaks Garden Design Ltd [12345678]",
+                    "description": """Company number: 12345678
+Incorporated: 2018-01-01
+Industry segment: landscape_and_garden_design
+Registered postcode: TN13 1AA
+Lead type: web_design_weak_site
+Website: https://sevenoaksgardens.co.uk
+Public corporate email: hello@sevenoaksgardens.co.uk
+Email source: https://sevenoaksgardens.co.uk/contact
+Privacy notice: https://example.com/privacy
+Google Maps URL: https://maps.google.com/example
+Google rating: 4.8
+Google review count: 65
+Website platform: Wix
+Opportunity score: 75/100
+Primary website issue: No project portfolio detected
+""",
+                    "status": {"status": "completed"},
+                }
+            ]
+        }
+    )
+    client = ClickUpClient(
+        "secret",
+        "list-id",
+        {
+            "task_name_prefix": "[REVIEW REQUIRED] Web Design Audit",
+            "web_design_task_name_prefix": "[REVIEW REQUIRED] Web Design Audit",
+            "privacy_notice_url": "https://example.com/privacy",
+        },
+        session=session,
+    )
+
+    lead = client.approved_leads(
+        "completed", required_lead_type="web_design_weak_site"
+    )[0]
+
+    assert lead.primary_issue == "No project portfolio detected"
+    assert lead.opportunity_score == 75
+    assert lead.website_platform == "Wix"
+    assert lead.google_review_count == 65

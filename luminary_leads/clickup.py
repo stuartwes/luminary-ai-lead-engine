@@ -46,7 +46,7 @@ class ClickUpClient:
         description = self._description(lead)
         prefix = (
             self.config.get("web_design_task_name_prefix", "[REVIEW REQUIRED] Web Design lead")
-            if not lead.website
+            if not lead.website or lead.lead_type in {"web_design", "web_design_weak_site"}
             else self.config["task_name_prefix"]
         )
         payload = {
@@ -150,6 +150,24 @@ class ClickUpClient:
                 self._field(description, "Lead type", required=False)
                 or "ai_business_lab"
             ),
+            website_platform=self._field(
+                description, "Website platform", required=False
+            ),
+            opportunity_score=self._integer_field(
+                description, "Opportunity score"
+            ),
+            primary_issue=self._field(
+                description, "Primary website issue", required=False
+            ),
+            google_rating=self._field(
+                description, "Google rating", required=False
+            ),
+            google_review_count=self._integer_field(
+                description, "Google review count"
+            ),
+            google_maps_url=self._field(
+                description, "Google Maps URL", required=False
+            ),
         )
 
     @staticmethod
@@ -161,10 +179,16 @@ class ClickUpClient:
             return ""
         return match.group(1).strip()
 
+    @classmethod
+    def _integer_field(cls, description: str, label: str) -> int:
+        value = cls._field(description, label, required=False)
+        match = re.search(r"\d+", value)
+        return int(match.group(0)) if match else 0
+
     def _description(self, lead: EnrichedLead) -> str:
         company = lead.company
         privacy_notice_url = self.config["privacy_notice_url"]
-        lead_type = (
+        lead_type = lead.lead_type or (
             self.config.get("website_lead_type", "ai_business_lab")
             if lead.website
             else self.config.get("no_website_lead_type", "web_design")
@@ -222,4 +246,33 @@ Privacy notice: {privacy_notice_url}
 
 Suggested offer: {suggested_offer}
 {offer_link}
+{self._website_audit_description(lead)}
+"""
+
+    @staticmethod
+    def _website_audit_description(lead: EnrichedLead) -> str:
+        if not (
+            lead.google_place_id
+            or lead.opportunity_score
+            or lead.primary_issue
+            or lead.audit_signals
+        ):
+            return ""
+        rating = (
+            f"{lead.google_rating:.1f}"
+            if lead.google_rating is not None
+            else "Not supplied"
+        )
+        signals = "\n".join(f"- {item}" for item in lead.audit_signals) or "- None"
+        return f"""
+Website opportunity audit:
+Google Place ID: {lead.google_place_id}
+Google Maps URL: {lead.google_maps_url or 'Not supplied'}
+Google rating: {rating}
+Google review count: {lead.google_review_count}
+Website platform: {lead.website_platform or 'Unknown'}
+Opportunity score: {lead.opportunity_score}/100
+Primary website issue: {lead.primary_issue or 'Not supplied'}
+Audit signals:
+{signals}
 """

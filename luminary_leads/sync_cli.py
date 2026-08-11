@@ -13,6 +13,7 @@ LOGGER = logging.getLogger(__name__)
 CAMPAIGN_SECTIONS = {
     "ai_business_lab": "instantly",
     "web_design": "instantly_web_design",
+    "web_design_weak_site": "instantly_weak_sites",
 }
 
 
@@ -47,15 +48,38 @@ def main() -> int:
     env_dry_run = os.getenv("DRY_RUN", "true").casefold() not in {"false", "0", "no"}
     dry_run = args.dry_run or env_dry_run
     secrets = load_sync_secrets(allow_missing=dry_run)
+    weak_site_config = (
+        load_config("config/web_design.yaml")
+        if args.lead_type == "web_design_weak_site"
+        else None
+    )
+    instantly_config = campaign_config(weak_site_config or config, args.lead_type)
+    list_id = secrets["CLICKUP_LIST_ID"]
+    list_id_env = str(instantly_config.get("clickup_list_id_env") or "")
+    if list_id_env:
+        list_id = os.getenv(list_id_env, "").strip()
+    list_id = list_id or str(instantly_config.get("clickup_list_id") or "")
+    if not list_id:
+        raise RuntimeError(
+            f"Missing ClickUp List ID{f' in {list_id_env}' if list_id_env else ''}"
+        )
+    clickup_config = (weak_site_config or config)["clickup"]
     clickup = ClickUpClient(
         secrets["CLICKUP_API_TOKEN"],
-        secrets["CLICKUP_LIST_ID"],
-        config["clickup"],
+        list_id,
+        clickup_config,
     )
-    instantly_config = campaign_config(config, args.lead_type)
+    campaign_id = str(instantly_config.get("campaign_id") or "")
+    campaign_id_env = str(instantly_config.get("campaign_id_env") or "")
+    if campaign_id_env:
+        campaign_id = os.getenv(campaign_id_env, "").strip()
+    if not campaign_id:
+        raise RuntimeError(
+            f"Missing Instantly campaign ID{f' in {campaign_id_env}' if campaign_id_env else ''}"
+        )
     instantly = InstantlyClient(
         secrets["INSTANTLY_API_KEY"],
-        instantly_config["campaign_id"],
+        campaign_id,
         instantly_config,
     )
 

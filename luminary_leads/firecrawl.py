@@ -233,6 +233,16 @@ class FirecrawlClient:
         }
         return self._post_json("scrape", payload).get("data") or {}
 
+    def scrape(self, url: str) -> dict:
+        """Scrape a known company URL using the configured safety and retry policy."""
+        return self._scrape(url)
+
+    def email_allowed(self, email: str, website: str) -> bool:
+        return self._email_allowed(email, website)
+
+    def email_priority(self, email: str) -> tuple[int, str]:
+        return self._email_priority(email)
+
     def _post_json(self, endpoint: str, payload: dict) -> dict:
         attempts = max(1, int(self.config.get("retry_attempts", 3)))
         rate_limit_attempts = max(

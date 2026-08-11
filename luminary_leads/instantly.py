@@ -47,6 +47,12 @@ class InstantlyClient:
                         "email_source_url": lead.email_source_url,
                         "privacy_notice_url": lead.privacy_notice_url,
                         "lead_type": lead.lead_type,
+                        "website_platform": lead.website_platform,
+                        "opportunity_score": lead.opportunity_score,
+                        "primary_issue": lead.primary_issue,
+                        "google_rating": lead.google_rating,
+                        "google_review_count": lead.google_review_count,
+                        "google_maps_url": lead.google_maps_url,
                     },
                 }
             ],

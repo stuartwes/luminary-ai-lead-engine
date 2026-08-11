@@ -26,6 +26,14 @@ FLORIDA_REQUIRED_SECRETS = (
     "CLICKUP_LIST_ID",
 )
 
+WEB_DESIGN_REQUIRED_SECRETS = (
+    "GOOGLE_PLACES_API_KEY",
+    "COMPANIES_HOUSE_API_KEY",
+    "FIRECRAWL_API_KEY",
+    "CLICKUP_API_TOKEN",
+    "WEB_DESIGN_CLICKUP_LIST_ID",
+)
+
 
 def load_config(path: str | Path) -> dict[str, Any]:
     with Path(path).open("r", encoding="utf-8") as handle:
@@ -53,6 +61,14 @@ def load_sync_secrets(*, allow_missing: bool = False) -> dict[str, str]:
 
 def load_florida_secrets(*, allow_missing: bool = False) -> dict[str, str]:
     values = {name: os.getenv(name, "").strip() for name in FLORIDA_REQUIRED_SECRETS}
+    missing = [name for name, value in values.items() if not value]
+    if missing and not allow_missing:
+        raise RuntimeError("Missing required environment variables: " + ", ".join(missing))
+    return values
+
+
+def load_web_design_secrets(*, allow_missing: bool = False) -> dict[str, str]:
+    values = {name: os.getenv(name, "").strip() for name in WEB_DESIGN_REQUIRED_SECRETS}
     missing = [name for name, value in values.items() if not value]
     if missing and not allow_missing:
         raise RuntimeError("Missing required environment variables: " + ", ".join(missing))
