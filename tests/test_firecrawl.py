@@ -243,4 +243,31 @@ def test_indexed_site_search_finds_only_same_domain_role_email():
         "hello@brightagency.co.uk",
         "https://brightagency.co.uk/contact",
     )
-    assert session.last_json["query"].startswith("site:brightagency.co.uk")
+    assert '"brightagency.co.uk"' in session.last_json["query"]
+
+
+def test_indexed_external_profile_can_supply_same_domain_role_email():
+    session = SequencedSession([
+        FakeResponse(
+            200,
+            {
+                "data": {
+                    "web": [
+                        {
+                            "url": "https://localprofile.example/bright-agency",
+                            "title": "Bright Agency contact details",
+                            "description": "Email info@brightagency.co.uk",
+                        }
+                    ]
+                }
+            },
+        )
+    ])
+    client = FirecrawlClient("test", CONFIG, session=session)
+
+    assert client.discover_role_email_on_website(
+        "https://brightagency.co.uk", "Bright Agency", "SE1 2AA"
+    ) == (
+        "info@brightagency.co.uk",
+        "https://localprofile.example/bright-agency",
+    )
