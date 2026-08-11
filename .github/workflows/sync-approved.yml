@@ -28,7 +28,7 @@ jobs:
     env:
       CLICKUP_API_TOKEN: ${{ secrets.CLICK_UP_TOKEN }}
       CLICKUP_LIST_ID: ${{ secrets.CLICKUP_LIST_ID }}
-      WEB_DESIGN_CLICKUP_LIST_ID: "90122029143"
+      WEB_DESIGN_CLICKUP_LIST_ID: "901220291430"
       INSTANTLY_API_KEY: ${{ secrets.INSTANTLY_API }}
       DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || 'false' }}
 
