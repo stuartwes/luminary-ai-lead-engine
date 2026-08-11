@@ -21,6 +21,20 @@ def test_only_role_email_on_same_domain_is_allowed():
     assert not client._email_allowed("info@another.co.uk", "https://brightagency.co.uk")
 
 
+def test_official_website_can_publish_named_same_domain_mailbox():
+    client = FirecrawlClient("test", CONFIG)
+
+    assert client.email_allowed_on_official_website(
+        "jane@brightagency.co.uk", "https://brightagency.co.uk"
+    )
+    assert not client.email_allowed_on_official_website(
+        "jane@gmail.com", "https://brightagency.co.uk"
+    )
+    assert not client.email_allowed_on_official_website(
+        "jane@another.co.uk", "https://brightagency.co.uk"
+    )
+
+
 def test_company_domain_match_scores_highly():
     client = FirecrawlClient("test", CONFIG)
     company = Company("123", "Bright Agency Limited", "2026-07-01", "ltd", "active", ["73110"], {"postal_code": "SE1 2AA"})

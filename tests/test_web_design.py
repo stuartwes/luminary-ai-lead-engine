@@ -108,6 +108,14 @@ class AuditFirecrawl:
         return email in {"hello@sevenoaksgardens.co.uk", "info@sevenoaksgardens.co.uk"}
 
     @staticmethod
+    def email_allowed_on_official_website(email, website):
+        return email in {
+            "hello@sevenoaksgardens.co.uk",
+            "info@sevenoaksgardens.co.uk",
+            "jane@sevenoaksgardens.co.uk",
+        }
+
+    @staticmethod
     def email_priority(email):
         return (0 if email.startswith("hello@") else 1, email)
 
@@ -202,4 +210,18 @@ def test_missing_same_domain_role_email_logs_clear_rejection(caplog):
     audit = WebsiteAuditClient(AuditFirecrawl(homepage), AUDIT_CONFIG)
 
     assert audit.qualify(_company(), _place(), "landscape_and_garden_design", 85) is None
-    assert "no public role-based email found on the website domain" in caplog.text
+    assert "no public business-domain email found on the official website" in caplog.text
+
+
+def test_named_same_domain_mailbox_published_on_official_site_can_qualify():
+    homepage = {
+        "markdown": "Beautiful gardens. jane@sevenoaksgardens.co.uk",
+        "html": '<script src="https://static.wixstatic.com/app.js"></script>',
+        "links": [],
+    }
+    audit = WebsiteAuditClient(AuditFirecrawl(homepage), AUDIT_CONFIG)
+
+    lead = audit.qualify(_company(), _place(), "landscape_and_garden_design", 92)
+
+    assert lead is not None
+    assert lead.email == "jane@sevenoaksgardens.co.uk"

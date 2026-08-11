@@ -126,7 +126,7 @@ class WebsiteAuditClient:
         email_candidates: list[tuple[str, str]] = []
         for url, data in pages:
             for email in EMAIL_RE.findall(self._page_text(data)):
-                if self.firecrawl.email_allowed(email, place.website):
+                if self.firecrawl.email_allowed_on_official_website(email, place.website):
                     email_candidates.append((email.lower(), url))
         if not email_candidates:
             discovered_email = self.firecrawl.discover_role_email_on_website(
@@ -140,7 +140,7 @@ class WebsiteAuditClient:
                 )
         if not email_candidates:
             LOGGER.info(
-                "Skipped %s: no public role-based email found on the website domain",
+                "Skipped %s: no public business-domain email found on the official website",
                 place.name,
             )
             return None
@@ -166,7 +166,7 @@ class WebsiteAuditClient:
             email_source_url=source,
             industry=industry,
             confidence=corporate_match_score,
-            evidence=["Public role-based email on the Google-listed company website"],
+            evidence=["Public business-domain email on the Google-listed company website"],
             lead_type="web_design_weak_site",
             google_place_id=place.place_id,
             google_maps_url=place.google_maps_url,

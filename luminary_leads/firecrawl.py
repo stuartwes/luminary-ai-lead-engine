@@ -240,6 +240,14 @@ class FirecrawlClient:
     def email_allowed(self, email: str, website: str) -> bool:
         return self._email_allowed(email, website)
 
+    def email_allowed_on_official_website(self, email: str, website: str) -> bool:
+        """Allow a public company-domain mailbox when the official site publishes it."""
+        _, _, domain = email.lower().rpartition("@")
+        if domain in {item.lower() for item in self.config["blocked_email_domains"]}:
+            return False
+        website_domain = self._root_domain(urlparse(website).netloc)
+        return self._root_domain(domain) == website_domain
+
     def email_priority(self, email: str) -> tuple[int, str]:
         return self._email_priority(email)
 
