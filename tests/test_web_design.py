@@ -171,7 +171,8 @@ def test_wix_site_with_thin_content_and_no_conversion_structure_qualifies():
     assert "crawlable" in lead.primary_issue
 
 
-def test_modern_content_rich_site_is_not_selected_merely_for_good_reviews():
+def test_modern_content_rich_site_is_not_selected_merely_for_good_reviews(caplog):
+    caplog.set_level("INFO")
     content = " ".join(["garden"] * 130)
     homepage = {
         "markdown": (
@@ -184,3 +185,17 @@ def test_modern_content_rich_site_is_not_selected_merely_for_good_reviews():
     audit = WebsiteAuditClient(AuditFirecrawl(homepage), AUDIT_CONFIG)
 
     assert audit.qualify(_company(), _place(), "landscape_and_garden_design", 92) is None
+    assert "website opportunity score" in caplog.text
+
+
+def test_missing_same_domain_role_email_logs_clear_rejection(caplog):
+    caplog.set_level("INFO")
+    homepage = {
+        "markdown": "Beautiful gardens and landscape services.",
+        "html": '<script src="https://static.wixstatic.com/app.js"></script>',
+        "links": [],
+    }
+    audit = WebsiteAuditClient(AuditFirecrawl(homepage), AUDIT_CONFIG)
+
+    assert audit.qualify(_company(), _place(), "landscape_and_garden_design", 85) is None
+    assert "no public role-based email found on the website domain" in caplog.text
