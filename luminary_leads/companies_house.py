@@ -112,7 +112,7 @@ class CompaniesHouseClient:
     def _to_company(item: dict[str, Any]) -> Company:
         return Company(
             company_number=str(item.get("company_number", "")),
-            name=str(item.get("company_name", "")).strip(),
+            name=str(item.get("company_name") or item.get("title") or "").strip(),
             incorporated_on=str(item.get("date_of_creation") or item.get("incorporated_on") or ""),
             company_type=str(item.get("company_type", "")),
             status=str(item.get("company_status", "")),
