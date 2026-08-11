@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
+from difflib import SequenceMatcher
 import re
 from typing import Any, Iterable
 
@@ -85,22 +86,36 @@ class CompaniesHouseClient:
         company_name: str,
         company_postcode: str,
     ) -> int:
-        ignored = {"limited", "ltd", "llp", "the", "and", "services", "company", "co"}
+        corporate_suffixes = {"limited", "ltd", "llp"}
 
-        def tokens(value: str) -> set[str]:
-            return {
+        def tokens(value: str) -> list[str]:
+            return [
                 token
                 for token in re.findall(r"[a-z0-9]+", value.casefold())
-                if token not in ignored and len(token) > 1
-            }
+                if token not in corporate_suffixes and len(token) > 1
+            ]
 
         business_tokens = tokens(business_name)
         company_tokens = tokens(company_name)
         if not business_tokens or not company_tokens:
             name_score = 0
         else:
-            overlap = len(business_tokens & company_tokens)
-            name_score = round(70 * (2 * overlap / (len(business_tokens) + len(company_tokens))))
+            business_normalized = " ".join(business_tokens)
+            company_normalized = " ".join(company_tokens)
+            if business_normalized == company_normalized:
+                name_score = 100
+            else:
+                business_set = set(business_tokens)
+                company_set = set(company_tokens)
+                overlap = len(business_set & company_set)
+                token_similarity = 2 * overlap / (len(business_set) + len(company_set))
+                text_similarity = SequenceMatcher(
+                    None, business_normalized, company_normalized
+                ).ratio()
+                similarity = max(token_similarity, text_similarity)
+                # A close spelling/token match is sufficient on its own. Weaker
+                # names still need the registered postcode as corroboration.
+                name_score = round((100 if similarity >= 0.85 else 70) * similarity)
         postcode_match = (
             bool(business_postcode and company_postcode)
             and business_postcode.replace(" ", "").casefold()
