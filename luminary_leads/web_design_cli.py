@@ -20,7 +20,7 @@ def parse_args() -> argparse.Namespace:
         "--location",
         "--town",
         dest="town",
-        help="Town, city or London suburb to search",
+        help="Town/city, or London suburb in the form 'Clapham, London'",
     )
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--max-leads", type=int)
