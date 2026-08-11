@@ -1,6 +1,5 @@
 target:
   town: Sevenoaks
-  parent_location_fallback: London
   industry: landscape_and_garden_design
   query_templates:
     - "gardener in {town}"
