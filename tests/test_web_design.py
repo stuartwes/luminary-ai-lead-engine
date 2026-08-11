@@ -54,22 +54,93 @@ def test_places_text_search_requests_website_and_maps_fields():
     assert "places.userRatingCount" in request["headers"]["X-Goog-FieldMask"]
 
 
-def test_companies_house_business_match_requires_corporate_identity_and_postcode():
+def test_companies_house_business_match_accepts_exact_name_without_postcode_match():
     score = CompaniesHouseClient._business_match_score(
-        "Chris Wild Garden Design",
+        "Sevenoaks Garden Design",
         "TN13 1AA",
-        "Chris Wild Limited",
-        "TN13 1AA",
+        "Sevenoaks Garden Design Limited",
+        "EC1A 1BB",
     )
+
+    assert score >= 70
+
+
+def test_companies_house_business_match_accepts_strong_name_without_postcode_match():
+    score = CompaniesHouseClient._business_match_score(
+        "Sevenoaks Garden Design",
+        "TN13 1AA",
+        "Sevenoaks Gardens Design Ltd",
+        "EC1A 1BB",
+    )
+
+    assert score >= 70
+
+
+def test_companies_house_business_match_rejects_unrelated_name_at_same_postcode():
     mismatch = CompaniesHouseClient._business_match_score(
         "Unrelated Landscapes",
         "TN13 1AA",
         "Chris Wild Limited",
         "TN13 1AA",
     )
-
-    assert score >= 70
     assert mismatch < 70
+
+
+class CompaniesHouseSession:
+    def __init__(self, items):
+        self.items = items
+
+    def get(self, *_args, **_kwargs):
+        return FakeResponse({"items": self.items})
+
+
+def test_find_corporate_match_allows_active_ltd_with_exact_name_at_other_postcode():
+    client = CompaniesHouseClient(
+        "secret",
+        session=CompaniesHouseSession(
+            [
+                {
+                    "title": "Sevenoaks Garden Design Ltd",
+                    "company_number": "12345678",
+                    "company_status": "active",
+                    "company_type": "ltd",
+                    "address": {"postal_code": "EC1A 1BB"},
+                }
+            ]
+        ),
+    )
+
+    result = client.find_corporate_match("Sevenoaks Garden Design", "TN13 1AA")
+
+    assert result is not None
+    assert result[0].company_number == "12345678"
+    assert result[1] >= 70
+
+
+def test_find_corporate_match_still_rejects_inactive_and_non_ltd_llp_candidates():
+    client = CompaniesHouseClient(
+        "secret",
+        session=CompaniesHouseSession(
+            [
+                {
+                    "title": "Sevenoaks Garden Design Ltd",
+                    "company_number": "11111111",
+                    "company_status": "dissolved",
+                    "company_type": "ltd",
+                    "address": {"postal_code": "TN13 1AA"},
+                },
+                {
+                    "title": "Sevenoaks Garden Design",
+                    "company_number": "22222222",
+                    "company_status": "active",
+                    "company_type": "private-unlimited",
+                    "address": {"postal_code": "TN13 1AA"},
+                },
+            ]
+        ),
+    )
+
+    assert client.find_corporate_match("Sevenoaks Garden Design", "TN13 1AA") is None
 
 
 class AuditFirecrawl:
