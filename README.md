@@ -99,7 +99,7 @@ Add this GitHub Actions secret before running the pilot:
 
 - `GOOGLE_PLACES_API`
 
-The ClickUp board from `90121956512/v/b/6-901220291430-2` is configured with List ID `901220291430`, and Instantly campaign `2869b5e3-746b-4694-9433-9cd076472fe8` is configured for `web_design_weak_site` leads. The workflow uses the existing `FIRECRAWL_API` and `CLICK_UP_TOKEN` secrets. It is manual-only and defaults to dry-run mode with a two-lead cap. The location field has no default and must be entered for every run, preventing a previous town from being reused accidentally. It accepts a town, city or London suburb:
+The ClickUp board from `90121956512/v/b/6-901220291430-2` is configured with List ID `901220291430`, and Instantly campaign `2869b5e3-746b-4694-9433-9cd076472fe8` is configured for `web_design_weak_site` leads. The workflow uses the existing `FIRECRAWL_API` and `CLICK_UP_TOKEN` secrets. It is manual-only and defaults to dry-run mode with a two-lead cap. The location field has no default and must be entered for every run, preventing a previous town from being reused accidentally. Enter a town or city directly; enter a London suburb as `Clapham, London` so the address check remains strict:
 
 ```bash
 DRY_RUN=true luminary-web-design-leads --location Clapham --max-leads 2
