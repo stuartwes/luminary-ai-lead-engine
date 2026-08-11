@@ -35,12 +35,23 @@ class WebDesignLeadPipeline:
             template.format(town=town)
             for template in self.config["target"]["query_templates"]
         ]
-        places = self.places.search_queries(
+        discovered_places = self.places.search_queries(
             queries,
             page_size=int(collection.get("places_page_size", 20)),
             max_pages_per_query=int(collection.get("max_pages_per_query", 1)),
         )
-        places = [place for place in places if self._place_qualifies(place)]
+        places: list[PlaceBusiness] = []
+        for place in discovered_places:
+            rejection = self._place_rejection_reason(place)
+            if rejection:
+                LOGGER.info("Skipped Google Place %s: %s", place.name or place.place_id, rejection)
+            else:
+                places.append(place)
+        LOGGER.info(
+            "Google Places returned %d unique prospects; %d passed listing filters",
+            len(discovered_places),
+            len(places),
+        )
         places = places[: int(collection.get("max_candidates_per_run", 25))]
         existing = set() if dry_run else self.clickup.existing_company_numbers()
         accepted: list[EnrichedLead] = []
@@ -74,17 +85,22 @@ class WebDesignLeadPipeline:
         return accepted
 
     def _place_qualifies(self, place: PlaceBusiness) -> bool:
+        return self._place_rejection_reason(place) == ""
+
+    def _place_rejection_reason(self, place: PlaceBusiness) -> str:
         collection = self.config["collection"]
         if not place.place_id or not place.name or not place.postcode:
-            return False
+            return "missing Google Place ID, business name or postcode"
         if place.business_status and place.business_status != "OPERATIONAL":
-            return False
+            return f"business status is {place.business_status}"
         if place.rating is None or place.rating < float(collection.get("minimum_rating", 4.2)):
-            return False
+            return "Google rating is missing or below the configured minimum"
         if place.review_count < int(collection.get("minimum_review_count", 10)):
-            return False
+            return "Google review count is below the configured minimum"
         town = str(self.config["target"]["town"]).casefold()
-        return town in place.formatted_address.casefold()
+        if town not in place.formatted_address.casefold():
+            return f"formatted address is outside {self.config['target']['town']}"
+        return ""
 
     @staticmethod
     def _business_record(place: PlaceBusiness) -> Company:
