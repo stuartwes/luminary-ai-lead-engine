@@ -1,6 +1,7 @@
-from luminary_leads.companies_house import CompaniesHouseClient
-from luminary_leads.models import Company, PlaceBusiness
+from luminary_leads.clickup import ClickUpClient
+from luminary_leads.models import Company, EnrichedLead, PlaceBusiness
 from luminary_leads.places import GooglePlacesClient
+from luminary_leads.web_design_pipeline import WebDesignLeadPipeline
 from luminary_leads.website_audit import WebsiteAuditClient
 
 
@@ -54,22 +55,45 @@ def test_places_text_search_requests_website_and_maps_fields():
     assert "places.userRatingCount" in request["headers"]["X-Goog-FieldMask"]
 
 
-def test_companies_house_business_match_requires_corporate_identity_and_postcode():
-    score = CompaniesHouseClient._business_match_score(
-        "Chris Wild Garden Design",
-        "TN13 1AA",
-        "Chris Wild Limited",
-        "TN13 1AA",
+def test_google_place_creates_stable_business_record_without_companies_house():
+    first = WebDesignLeadPipeline._business_record(_place())
+    second = WebDesignLeadPipeline._business_record(_place())
+
+    assert first.company_number == second.company_number
+    assert first.company_number.startswith("GMB")
+    assert first.name == "Sevenoaks Garden Design"
+    assert first.postcode == "TN13 1AA"
+    assert first.company_type == "google_business_profile"
+
+
+def test_google_business_review_task_does_not_claim_companies_house_verification():
+    company = WebDesignLeadPipeline._business_record(_place())
+    lead = EnrichedLead(
+        company,
+        _place().website,
+        "hello@sevenoaksgardens.co.uk",
+        "https://sevenoaksgardens.co.uk/contact",
+        "landscape_and_garden_design",
+        85,
+        lead_type="web_design_weak_site",
     )
-    mismatch = CompaniesHouseClient._business_match_score(
-        "Unrelated Landscapes",
-        "TN13 1AA",
-        "Chris Wild Limited",
-        "TN13 1AA",
+    client = ClickUpClient(
+        "secret",
+        "list-id",
+        {
+            "task_name_prefix": "[REVIEW REQUIRED] Web Design Audit",
+            "web_design_task_name_prefix": "[REVIEW REQUIRED] Web Design Audit",
+            "privacy_notice_url": "https://example.com/privacy",
+            "company_source": "Google Places and verified business website",
+        },
     )
 
-    assert score >= 70
-    assert mismatch < 70
+    description = client.create_review_task(lead, dry_run=True)["payload"]["description"]
+
+    assert f"Lead record ID: {company.company_number}" in description
+    assert "Business postcode: TN13 1AA" in description
+    assert "Business identity and website ownership must be checked" in description
+    assert "Corporate body must be confirmed" not in description
 
 
 class AuditFirecrawl:
