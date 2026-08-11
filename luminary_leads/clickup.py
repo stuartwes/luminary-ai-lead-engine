@@ -7,7 +7,9 @@ import requests
 from .models import ApprovedLead, EnrichedLead
 
 
-COMPANY_NUMBER_RE = re.compile(r"Company number:\s*([A-Z0-9]+)", re.IGNORECASE)
+COMPANY_NUMBER_RE = re.compile(
+    r"(?:Company number|Lead record ID):\s*([A-Z0-9]+)", re.IGNORECASE
+)
 INSTANTLY_SYNC_MARKER = "Instantly sync outcome:"
 
 
@@ -116,7 +118,10 @@ class ClickUpClient:
 
     def _approved_lead(self, task: dict) -> ApprovedLead:
         description = str(task.get("description") or "")
-        company_number = self._field(description, "Company number")
+        company_number = (
+            self._field(description, "Lead record ID", required=False)
+            or self._field(description, "Company number")
+        )
         prefixes = (
             self.config["task_name_prefix"],
             self.config.get("web_design_task_name_prefix", "[REVIEW REQUIRED] Web Design lead"),
@@ -134,7 +139,10 @@ class ClickUpClient:
             company_name=company_name,
             incorporated_on=self._field(description, "Incorporated"),
             industry=self._field(description, "Industry segment"),
-            postcode=self._field(description, "Registered postcode"),
+            postcode=(
+                self._field(description, "Business postcode", required=False)
+                or self._field(description, "Registered postcode")
+            ),
             website=(
                 ""
                 if self._field(description, "Website").casefold() == "no website found"
@@ -207,6 +215,14 @@ class ClickUpClient:
         )
         market = self.config.get("market", "UK")
         source = self.config.get("company_source", "Companies House")
+        is_google_business = company.company_type == "google_business_profile"
+        identity_label = "Lead record ID" if is_google_business else "Company number"
+        postcode_label = "Business postcode" if is_google_business else "Registered postcode"
+        identity_check = (
+            "Business identity and website ownership must be checked before sending"
+            if is_google_business
+            else "Corporate body must be confirmed before sending"
+        )
         offer_link = (
             self.config.get(
                 "website_offer_link",
@@ -220,13 +236,13 @@ class ClickUpClient:
         )
         return f"""## Review before outreach
 
-Company number: {company.company_number}
+{identity_label}: {company.company_number}
 Incorporated: {company.incorporated_on}
 Market: {market}
 Company source: {source}
 Industry segment: {lead.industry}
 SIC codes: {', '.join(company.sic_codes) or 'Not supplied by source'}
-Registered postcode: {company.postcode}
+{postcode_label}: {company.postcode}
 Lead type: {lead_type}
 
 Website: {website}
@@ -237,7 +253,7 @@ Match confidence: {lead.confidence}/100
 Compliance controls:
 - Public role-based address only
 - Source page retained
-- Corporate body must be confirmed before sending
+- {identity_check}
 - Check the suppression list
 - Do not contact until this task is manually approved
 {('- US outreach must include an accurate sender identity, physical postal address and working opt-out' if market.startswith('US') else '')}

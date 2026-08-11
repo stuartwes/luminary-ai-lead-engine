@@ -28,7 +28,6 @@ jobs:
       cancel-in-progress: false
     env:
       GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API }}
-      COMPANIES_HOUSE_API_KEY: ${{ secrets.COMPANIES_HOUSE_API }}
       FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API }}
       CLICKUP_API_TOKEN: ${{ secrets.CLICK_UP_TOKEN }}
       WEB_DESIGN_CLICKUP_LIST_ID: "90122029143"

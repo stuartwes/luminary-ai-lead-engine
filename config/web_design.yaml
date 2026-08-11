@@ -14,8 +14,6 @@ collection:
   max_approved_leads_per_run: 10
   minimum_rating: 4.2
   minimum_review_count: 10
-  minimum_corporate_match_score: 70
-  company_types: [ltd, llp]
 
 enrichment:
   search_results: 5
@@ -108,7 +106,7 @@ clickup:
   web_design_task_name_prefix: "[REVIEW REQUIRED] Web Design Audit"
   privacy_notice_url: "https://luminaryaibusiness.com/luminaryaibusiness-privacy.html"
   market: UK
-  company_source: "Google Places and Companies House"
+  company_source: "Google Places and verified business website"
   website_lead_type: web_design_weak_site
   no_website_lead_type: web_design_weak_site
   website_suggested_offer: "Luminary AI Web Design — visual website upgrade"

@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import logging
 from pathlib import Path
 from typing import Any
 
 from .clickup import ClickUpClient
-from .companies_house import CompaniesHouseClient
-from .models import EnrichedLead, PlaceBusiness
+from .models import Company, EnrichedLead, PlaceBusiness
 from .places import GooglePlacesClient
 from .website_audit import WebsiteAuditClient
 
@@ -20,13 +20,11 @@ class WebDesignLeadPipeline:
         self,
         config: dict[str, Any],
         places: GooglePlacesClient,
-        companies_house: CompaniesHouseClient,
         website_audit: WebsiteAuditClient,
         clickup: ClickUpClient,
     ) -> None:
         self.config = config
         self.places = places
-        self.companies_house = companies_house
         self.website_audit = website_audit
         self.clickup = clickup
 
@@ -51,23 +49,14 @@ class WebDesignLeadPipeline:
             if len(accepted) >= int(collection.get("max_approved_leads_per_run", 10)):
                 break
             try:
-                corporate = self.companies_house.find_corporate_match(
-                    place.name,
-                    place.postcode,
-                    allowed_types=tuple(collection.get("company_types", ("ltd", "llp"))),
-                    minimum_score=int(collection.get("minimum_corporate_match_score", 70)),
-                )
-                if not corporate:
-                    LOGGER.info("Skipped %s: no strong corporate match", place.name)
-                    continue
-                company, match_score = corporate
+                company = self._business_record(place)
                 if company.company_number.upper() in existing:
                     continue
                 lead = self.website_audit.qualify(
                     company,
                     place,
                     str(self.config["target"]["industry"]),
-                    match_score,
+                    85,
                 )
                 if not lead:
                     continue
@@ -96,6 +85,19 @@ class WebDesignLeadPipeline:
             return False
         town = str(self.config["target"]["town"]).casefold()
         return town in place.formatted_address.casefold()
+
+    @staticmethod
+    def _business_record(place: PlaceBusiness) -> Company:
+        """Create a stable Google Places identity without requiring incorporation."""
+        identifier = hashlib.sha256(place.place_id.encode("utf-8")).hexdigest()[:16].upper()
+        return Company(
+            company_number=f"GMB{identifier}",
+            name=place.name,
+            incorporated_on="Not supplied",
+            company_type="google_business_profile",
+            status=place.business_status or "OPERATIONAL",
+            address={"postal_code": place.postcode},
+        )
 
 
 def write_web_design_csv(leads: list[EnrichedLead], path: str | Path) -> None:
