@@ -1,0 +1,36 @@
+name: Configure weak-site Instantly sequence
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "Apply the five-email sequence to the Instantly campaign"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  configure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      INSTANTLY_API_KEY: ${{ secrets.INSTANTLY_API }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: pip install .
+
+      - name: Preview or apply campaign sequence
+        run: >-
+          luminary-configure-weak-site-sequence
+          --campaign-id "2869b5e3-746b-4694-9433-9cd076472fe8"
+          ${{ inputs.apply && '--apply' || '' }}
