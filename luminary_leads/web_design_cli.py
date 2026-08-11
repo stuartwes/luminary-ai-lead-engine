@@ -5,7 +5,6 @@ import logging
 import os
 
 from .clickup import ClickUpClient
-from .companies_house import CompaniesHouseClient
 from .config import load_config, load_web_design_secrets
 from .firecrawl import FirecrawlClient
 from .places import GooglePlacesClient
@@ -37,7 +36,7 @@ def main() -> int:
     env_dry_run = os.getenv("DRY_RUN", "true").casefold() not in {"false", "0", "no"}
     dry_run = args.dry_run or env_dry_run
     secrets = load_web_design_secrets(allow_missing=True)
-    always_required = ("GOOGLE_PLACES_API_KEY", "COMPANIES_HOUSE_API_KEY", "FIRECRAWL_API_KEY")
+    always_required = ("GOOGLE_PLACES_API_KEY", "FIRECRAWL_API_KEY")
     missing = [name for name in always_required if not secrets[name]]
     clickup_list_id = secrets["WEB_DESIGN_CLICKUP_LIST_ID"] or str(
         config["clickup"].get("list_id") or ""
@@ -58,7 +57,6 @@ def main() -> int:
     pipeline = WebDesignLeadPipeline(
         config,
         GooglePlacesClient(secrets["GOOGLE_PLACES_API_KEY"]),
-        CompaniesHouseClient(secrets["COMPANIES_HOUSE_API_KEY"]),
         WebsiteAuditClient(firecrawl, config["website_audit"]),
         ClickUpClient(
             secrets["CLICKUP_API_TOKEN"],
