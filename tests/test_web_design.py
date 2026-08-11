@@ -66,6 +66,42 @@ def test_google_place_creates_stable_business_record_without_companies_house():
     assert first.company_type == "google_business_profile"
 
 
+def test_london_parent_address_can_match_a_suburb_search():
+    config = {
+        "target": {"town": "Clapham", "parent_location_fallback": "London"},
+        "collection": {"minimum_rating": 4.2, "minimum_review_count": 5},
+    }
+    pipeline = WebDesignLeadPipeline(config, None, None, None)
+    place = PlaceBusiness(
+        "place-2",
+        "Clapham Landscapes",
+        "10 High Street, London SW4 7AA, UK",
+        rating=4.8,
+        review_count=20,
+        business_status="OPERATIONAL",
+    )
+
+    assert pipeline._place_rejection_reason(place) == ""
+
+
+def test_non_london_result_still_requires_the_requested_location():
+    config = {
+        "target": {"town": "Sevenoaks", "parent_location_fallback": "London"},
+        "collection": {"minimum_rating": 4.2, "minimum_review_count": 5},
+    }
+    pipeline = WebDesignLeadPipeline(config, None, None, None)
+    place = PlaceBusiness(
+        "place-3",
+        "Elsewhere Landscapes",
+        "10 High Street, Maidstone ME14 1AA, UK",
+        rating=4.8,
+        review_count=20,
+        business_status="OPERATIONAL",
+    )
+
+    assert "outside Sevenoaks" in pipeline._place_rejection_reason(place)
+
+
 def test_google_business_review_task_does_not_claim_companies_house_verification():
     company = WebDesignLeadPipeline._business_record(_place())
     lead = EnrichedLead(
