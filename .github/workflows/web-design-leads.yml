@@ -12,7 +12,7 @@ on:
         type: number
         default: 2
       location:
-        description: "Town, city or London suburb"
+        description: "Town/city, or suburb as 'Clapham, London'"
         type: string
         required: true
 
