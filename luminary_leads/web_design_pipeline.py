@@ -98,7 +98,11 @@ class WebDesignLeadPipeline:
         if place.review_count < int(collection.get("minimum_review_count", 10)):
             return "Google review count is below the configured minimum"
         town = str(self.config["target"]["town"]).casefold()
-        if town not in place.formatted_address.casefold():
+        address = place.formatted_address.casefold()
+        parent = str(
+            self.config["target"].get("parent_location_fallback") or ""
+        ).casefold()
+        if town not in address and not (parent and parent in address):
             return f"formatted address is outside {self.config['target']['town']}"
         return ""
 
