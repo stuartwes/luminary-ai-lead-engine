@@ -102,7 +102,7 @@ website_audit:
 
 clickup:
   workspace_id: "90121956512"
-  list_id: "90122029143"
+  list_id: "901220291430"
   task_name_prefix: "[REVIEW REQUIRED] Web Design Audit"
   web_design_task_name_prefix: "[REVIEW REQUIRED] Web Design Audit"
   privacy_notice_url: "https://luminaryaibusiness.com/luminaryaibusiness-privacy.html"
@@ -118,7 +118,7 @@ clickup:
 instantly_weak_sites:
   campaign_id: "2869b5e3-746b-4694-9433-9cd076472fe8"
   clickup_list_id_env: WEB_DESIGN_CLICKUP_LIST_ID
-  clickup_list_id: "90122029143"
+  clickup_list_id: "901220291430"
   approved_clickup_status: completed
   lead_type: web_design_weak_site
   skip_if_in_workspace: true
