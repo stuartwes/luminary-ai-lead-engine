@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
+import re
 from typing import Any, Iterable
 
 import requests
@@ -41,6 +42,72 @@ class CompaniesHouseClient:
         response.raise_for_status()
         return [self._to_company(item) for item in response.json().get("items", [])]
 
+    def search_companies(self, query: str, items_per_page: int = 20) -> list[Company]:
+        response = self.session.get(
+            f"{self.BASE_URL}/search/companies",
+            params={"q": query, "items_per_page": min(items_per_page, 100)},
+            auth=(self.api_key, ""),
+            timeout=45,
+        )
+        response.raise_for_status()
+        return [self._to_company(item) for item in response.json().get("items", [])]
+
+    def find_corporate_match(
+        self,
+        business_name: str,
+        postcode: str,
+        *,
+        allowed_types: tuple[str, ...] = ("ltd", "llp"),
+        minimum_score: int = 70,
+    ) -> tuple[Company, int] | None:
+        candidates = self.search_companies(business_name)
+        ranked: list[tuple[int, Company]] = []
+        for company in candidates:
+            if company.status.casefold() != "active":
+                continue
+            if company.company_type.casefold() not in {
+                item.casefold() for item in allowed_types
+            }:
+                continue
+            score = self._business_match_score(
+                business_name, postcode, company.name, company.postcode
+            )
+            ranked.append((score, company))
+        if not ranked:
+            return None
+        score, company = max(ranked, key=lambda item: item[0])
+        return (company, score) if score >= minimum_score else None
+
+    @staticmethod
+    def _business_match_score(
+        business_name: str,
+        business_postcode: str,
+        company_name: str,
+        company_postcode: str,
+    ) -> int:
+        ignored = {"limited", "ltd", "llp", "the", "and", "services", "company", "co"}
+
+        def tokens(value: str) -> set[str]:
+            return {
+                token
+                for token in re.findall(r"[a-z0-9]+", value.casefold())
+                if token not in ignored and len(token) > 1
+            }
+
+        business_tokens = tokens(business_name)
+        company_tokens = tokens(company_name)
+        if not business_tokens or not company_tokens:
+            name_score = 0
+        else:
+            overlap = len(business_tokens & company_tokens)
+            name_score = round(70 * (2 * overlap / (len(business_tokens) + len(company_tokens))))
+        postcode_match = (
+            bool(business_postcode and company_postcode)
+            and business_postcode.replace(" ", "").casefold()
+            == company_postcode.replace(" ", "").casefold()
+        )
+        return min(100, name_score + (30 if postcode_match else 0))
+
     @staticmethod
     def _to_company(item: dict[str, Any]) -> Company:
         return Company(
@@ -52,4 +119,3 @@ class CompaniesHouseClient:
             sic_codes=[str(code) for code in item.get("sic_codes", [])],
             address=item.get("registered_office_address") or item.get("address") or {},
         )
-

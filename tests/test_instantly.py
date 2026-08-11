@@ -60,6 +60,27 @@ def test_add_lead_uses_campaign_dedupe_and_audit_variables():
     assert InstantlyClient.outcome(result) == "uploaded (lead ID: lead-1)"
 
 
+def test_weak_site_audit_fields_are_sent_as_custom_variables():
+    lead = approved_lead()
+    lead.lead_type = "web_design_weak_site"
+    lead.website_platform = "Wix"
+    lead.opportunity_score = 75
+    lead.primary_issue = "No project portfolio detected"
+    lead.google_rating = "4.8"
+    lead.google_review_count = 65
+    lead.google_maps_url = "https://maps.google.com/example"
+    session = FakeSession({"leads_uploaded": 1, "created_leads": [{"id": "lead-1"}]})
+    client = InstantlyClient("secret", "campaign-1", {}, session=session)
+
+    client.add_lead(lead)
+
+    variables = session.last_request[1]["json"]["leads"][0]["custom_variables"]
+    assert variables["primary_issue"] == "No project portfolio detected"
+    assert variables["opportunity_score"] == 75
+    assert variables["website_platform"] == "Wix"
+    assert variables["google_review_count"] == 65
+
+
 def test_blocklisted_lead_is_reported_as_suppressed():
     assert InstantlyClient.outcome({"leads_uploaded": 0, "in_blocklist": 1}) == (
         "suppressed by Instantly blocklist"
@@ -76,10 +97,18 @@ def test_campaign_config_routes_each_lead_type_separately():
             "campaign_id": "web-campaign",
             "lead_type": "web_design",
         },
+        "instantly_weak_sites": {
+            "campaign_id": "weak-site-campaign",
+            "lead_type": "web_design_weak_site",
+        },
     }
 
     assert campaign_config(config, "ai_business_lab")["campaign_id"] == "ai-campaign"
     assert campaign_config(config, "web_design")["campaign_id"] == "web-campaign"
+    assert (
+        campaign_config(config, "web_design_weak_site")["campaign_id"]
+        == "weak-site-campaign"
+    )
 
 
 def test_registry_domain_is_blocked_before_instantly_upload():
