@@ -115,6 +115,10 @@ class AuditFirecrawl:
     def enrich(company, industry):
         return None
 
+    @staticmethod
+    def discover_role_email_on_website(website, business_name, postcode):
+        return None
+
 
 AUDIT_CONFIG = {
     "pages_per_site": 1,
