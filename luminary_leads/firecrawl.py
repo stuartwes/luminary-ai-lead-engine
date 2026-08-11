@@ -246,10 +246,10 @@ class FirecrawlClient:
     def discover_role_email_on_website(
         self, website: str, business_name: str, postcode: str
     ) -> tuple[str, str] | None:
-        """Search indexed pages on a known business domain for a role address."""
+        """Search indexed web results for a role address on the known website domain."""
         domain = self._root_domain(urlparse(website).netloc)
         payload = {
-            "query": f'site:{domain} "{business_name}" {postcode} email contact',
+            "query": f'"{business_name}" {postcode} "{domain}" email contact',
             "limit": int(self.config.get("email_search_results_on_site", 8)),
             "sources": ["web"],
             "country": self.config.get("search_country", "UK"),
@@ -267,14 +267,21 @@ class FirecrawlClient:
             if not isinstance(item, dict) or not item.get("url"):
                 continue
             source_url = str(item["url"])
-            if not self._same_domain(website, source_url):
-                continue
             source_text = "\n".join(
                 str(item.get(key) or "")
                 for key in ("title", "description", "markdown")
             )
+            same_site = self._same_domain(website, source_url)
+            if not same_site:
+                if self._email_source_blocked(source_url):
+                    continue
+                identity_text = f"{source_url}\n{source_text}".casefold()
+                if not any(
+                    token in identity_text for token in self._company_tokens(business_name)
+                ):
+                    continue
             emails = EMAIL_RE.findall(source_text)
-            if not emails:
+            if not emails and same_site:
                 try:
                     scraped = self._scrape(source_url)
                 except requests.RequestException:
