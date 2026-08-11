@@ -135,7 +135,7 @@ class WebsiteAuditClient:
             if discovered_email:
                 email_candidates.append(discovered_email)
                 LOGGER.info(
-                    "Found a public same-domain role email for %s through indexed-site search",
+                    "Found a public same-domain role email for %s through indexed web search",
                     place.name,
                 )
         if not email_candidates:
