@@ -13,7 +13,7 @@ collection:
   max_candidates_per_run: 25
   max_approved_leads_per_run: 10
   minimum_rating: 4.2
-  minimum_review_count: 10
+  minimum_review_count: 5
 
 enrichment:
   search_results: 5
