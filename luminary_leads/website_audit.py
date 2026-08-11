@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import logging
 import re
 from datetime import date
 from urllib.parse import urljoin, urlparse
 
 from .firecrawl import EMAIL_RE, FirecrawlClient
 from .models import Company, EnrichedLead, PlaceBusiness
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 PLATFORM_SIGNATURES = (
@@ -33,6 +37,10 @@ class WebsiteAuditClient:
         if not place.website:
             discovered = self.firecrawl.enrich(company, industry)
             if not discovered:
+                LOGGER.info(
+                    "Skipped %s: no verified website with a public same-domain role email",
+                    place.name,
+                )
                 return None
             if discovered.website:
                 place.website = discovered.website
@@ -121,10 +129,20 @@ class WebsiteAuditClient:
                 if self.firecrawl.email_allowed(email, place.website):
                     email_candidates.append((email.lower(), url))
         if not email_candidates:
+            LOGGER.info(
+                "Skipped %s: no public role-based email found on the website domain",
+                place.name,
+            )
             return None
 
         minimum_score = int(self.config.get("minimum_opportunity_score", 50))
         if score < minimum_score:
+            LOGGER.info(
+                "Skipped %s: website opportunity score %d is below the minimum %d",
+                place.name,
+                score,
+                minimum_score,
+            )
             return None
 
         email, source = sorted(
