@@ -51,6 +51,22 @@ def test_companies_house_contract_and_mapping():
     assert request["auth"] == ("secret", "")
 
 
+def test_companies_house_standard_search_maps_title_as_company_name():
+    company = CompaniesHouseClient._to_company(
+        {
+            "company_number": "12345678",
+            "title": "NATURE NURTURE GARDENS LTD",
+            "date_of_creation": "2018-01-01",
+            "company_type": "ltd",
+            "company_status": "active",
+            "address": {"postal_code": "TN13 1AA"},
+        }
+    )
+
+    assert company.name == "NATURE NURTURE GARDENS LTD"
+    assert company.postcode == "TN13 1AA"
+
+
 def test_clickup_dry_run_contains_audit_fields_and_no_secret():
     company = Company("12345678", "Bright Agency Ltd", "2026-07-20", "ltd", "active", ["73110"], {"postal_code": "SE1 2AA"})
     lead = EnrichedLead(company, "https://brightagency.co.uk", "hello@brightagency.co.uk", "https://brightagency.co.uk/contact", "marketing", 85)
