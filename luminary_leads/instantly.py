@@ -66,6 +66,34 @@ class InstantlyClient:
         response.raise_for_status()
         return response.json()
 
+    def get_campaign(self) -> dict:
+        response = self.session.get(
+            f"{self.BASE_URL}/campaigns/{self.campaign_id}",
+            headers=self.headers,
+            timeout=60,
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def update_sequence(self, sequences: list[dict]) -> dict:
+        if len(sequences) != 1 or len(sequences[0].get("steps") or []) != 5:
+            raise ValueError("The weak-site campaign must contain exactly five email steps")
+        response = self.session.patch(
+            f"{self.BASE_URL}/campaigns/{self.campaign_id}",
+            headers=self.headers,
+            json={
+                "sequences": sequences,
+                "stop_on_reply": True,
+                "stop_on_auto_reply": True,
+                "link_tracking": False,
+                "text_only": True,
+                "first_email_text_only": True,
+            },
+            timeout=60,
+        )
+        response.raise_for_status()
+        return response.json()
+
     def blocked_lead_domain(self, lead: ApprovedLead) -> str | None:
         blocked = {
             str(domain).casefold().removeprefix("www.")

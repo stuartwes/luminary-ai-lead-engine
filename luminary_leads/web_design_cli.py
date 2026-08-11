@@ -16,7 +16,12 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Luminary AI weak-website lead engine")
     parser.add_argument("--config", default="config/web_design.yaml")
     parser.add_argument("--output", default="output/web-design-leads.csv")
-    parser.add_argument("--town", help="Override the configured pilot town")
+    parser.add_argument(
+        "--location",
+        "--town",
+        dest="town",
+        help="Town/city, or London suburb in the form 'Clapham, London'",
+    )
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--max-leads", type=int)
     return parser.parse_args()
@@ -28,6 +33,9 @@ def main() -> int:
     config = load_config(args.config)
     if args.town:
         config["target"]["town"] = args.town.strip()
+        config["enrichment"]["search_location"] = (
+            f"{args.town.strip()},England,United Kingdom"
+        )
     if args.max_leads is not None:
         if args.max_leads < 1:
             raise ValueError("--max-leads must be at least 1")

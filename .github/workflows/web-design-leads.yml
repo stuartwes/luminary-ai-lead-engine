@@ -1,4 +1,4 @@
-name: Sevenoaks weak-website pilot
+name: Daily local weak-website search
 
 on:
   workflow_dispatch:
@@ -11,10 +11,10 @@ on:
         description: "Maximum review-ready web-design leads"
         type: number
         default: 2
-      town:
-        description: "Town to search"
+      location:
+        description: "Town/city, or suburb as 'Clapham, London'"
         type: string
-        default: "Sevenoaks"
+        required: true
 
 permissions:
   contents: read
@@ -47,5 +47,5 @@ jobs:
       - name: Discover and audit weak websites
         run: >-
           luminary-web-design-leads
-          --town "${{ inputs.town }}"
+          --location "${{ inputs.location }}"
           --max-leads "${{ inputs.max_leads }}"

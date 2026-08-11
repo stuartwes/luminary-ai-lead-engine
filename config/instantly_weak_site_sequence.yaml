@@ -1,0 +1,102 @@
+sequences:
+  - steps:
+      - type: email
+        delay: 0
+        delay_unit: days
+        variants:
+          - subject: "A different direction for {{companyName | your website}}"
+            body: |-
+              Hi,
+
+              I came across {{companyName | your business}} while looking at established garden and landscaping businesses in your area.
+
+              The work you create is visual, but most trade websites flatten that work into the same rows of text and images. Luminary rebuilds existing sites as motion-led experiences, so a potential customer can see and feel the difference immediately.
+
+              You can see the approach here:
+              https://luminaryaiwebdesign.co.uk/
+
+              Every site is also built to be fast, SEO-ready and readable by AI assistants — not just visually different.
+
+              Would you be open to seeing what we would change on your current site?
+
+              Stuart
+
+              If this is not relevant, reply no and I will not follow up.
+      - type: email
+        delay: 2
+        delay_unit: days
+        variants:
+          - subject: ""
+            body: |-
+              Hi,
+
+              Just following up because the main difference is easier to see than explain. Open the Luminary site alongside your current website and the contrast is immediate.
+
+              A conventional website asks someone to scroll through static sections. A Luminary site uses motion, depth and a continuous visual journey to make the business — and its work — more memorable.
+
+              Here is what that looks like:
+              https://luminaryaiwebdesign.co.uk/
+
+              If it gives you an idea for {{companyName | your business}}, I can run a free audit of your current site and show you the strongest opportunities.
+
+              Stuart
+      - type: email
+        delay: 3
+        delay_unit: days
+        variants:
+          - subject: ""
+            body: |-
+              Hi,
+
+              Motion should never come at the cost of being found.
+
+              Under the visual layer, every Luminary site is built as a clear, structured document: fast, SEO-ready and easy for Google and AI assistants to understand.
+
+              That combination is the point — a site that looks genuinely different while still helping the right customers discover the business.
+
+              You can request a free visibility audit here:
+              https://luminaryaiwebdesign.co.uk/contact/
+
+              It will show what your current site is doing well, what may be holding it back and what a rebuild could change.
+
+              Stuart
+      - type: email
+        delay: 4
+        delay_unit: days
+        variants:
+          - subject: ""
+            body: |-
+              Hi,
+
+              The free audit is not a sales proposal. It is a useful first look at your current website — its design, crawlability, SEO structure and visibility to AI assistants.
+
+              It gives us something specific to discuss instead of starting with a generic sales call.
+
+              Request the audit here:
+              https://luminaryaiwebdesign.co.uk/contact/
+
+              Or, if you would rather talk it through first, you can book twenty minutes here:
+              https://calendly.com/wesselby/luminaryai-exploratory-meeting
+
+              Stuart
+      - type: email
+        delay: 5
+        delay_unit: days
+        variants:
+          - subject: ""
+            body: |-
+              Hi,
+
+              I will close the loop after this.
+
+              If you are curious about how {{companyName | your business}} could look as a motion-led website, I would be happy to start with the free audit:
+              https://luminaryaiwebdesign.co.uk/contact/
+
+              Or book a short conversation here:
+              https://calendly.com/wesselby/luminaryai-exploratory-meeting
+
+              Either way, there is no obligation. The aim is simply to let you see the difference before deciding whether it is worth taking further.
+
+              Stuart
+
+              If the timing is not right, reply no and I will close this out.

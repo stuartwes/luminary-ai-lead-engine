@@ -23,6 +23,14 @@ class FakeSession:
         self.last_request = (url, kwargs)
         return FakeResponse(self.payload)
 
+    def get(self, url, **kwargs):
+        self.last_request = (url, kwargs)
+        return FakeResponse(self.payload)
+
+    def patch(self, url, **kwargs):
+        self.last_request = (url, kwargs)
+        return FakeResponse(self.payload)
+
 
 def approved_lead():
     return ApprovedLead(
@@ -129,3 +137,30 @@ def test_registry_domain_is_blocked_before_instantly_upload():
         assert "jars.lt" in str(exc)
     else:
         raise AssertionError("Expected blocked registry-domain lead")
+
+
+def test_five_step_campaign_update_preserves_deliverability_controls():
+    sequences = [{"steps": [{"type": "email"} for _ in range(5)]}]
+    session = FakeSession({"sequences": sequences})
+    client = InstantlyClient("secret", "campaign-1", {}, session=session)
+
+    result = client.update_sequence(sequences)
+
+    url, request = session.last_request
+    assert url.endswith("/api/v2/campaigns/campaign-1")
+    assert request["json"]["sequences"] == sequences
+    assert request["json"]["stop_on_reply"] is True
+    assert request["json"]["link_tracking"] is False
+    assert request["json"]["text_only"] is True
+    assert len(result["sequences"][0]["steps"]) == 5
+
+
+def test_campaign_update_rejects_non_five_step_sequence():
+    client = InstantlyClient("secret", "campaign-1", {}, session=FakeSession({}))
+
+    try:
+        client.update_sequence([{"steps": [{"type": "email"}]}])
+    except ValueError as exc:
+        assert "exactly five" in str(exc)
+    else:
+        raise AssertionError("Expected five-step validation error")

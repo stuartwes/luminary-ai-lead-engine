@@ -2,10 +2,10 @@ target:
   town: Sevenoaks
   industry: landscape_and_garden_design
   query_templates:
-    - "landscape designer in {town}"
+    - "gardener in {town}"
+    - "landscape gardener in {town}"
     - "garden designer in {town}"
     - "landscaping company in {town}"
-    - "bespoke garden design in {town}"
 
 collection:
   places_page_size: 20
