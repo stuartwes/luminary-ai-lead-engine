@@ -89,23 +89,29 @@ This repository is public. Never commit API keys, `.env`, generated lead CSV fil
 
 The workflow is scheduled for 07:00 Europe/London. GitHub schedules both possible UTC offsets, and the application accepts delayed delivery between 07:00 and 10:00 while ClickUp company-number deduplication prevents duplicate tasks.
 
-## Sevenoaks weak-website pilot
+## Daily local weak-website search
 
-The `Sevenoaks weak-website pilot` workflow uses Google Places Text Search to find established landscape and garden-design businesses. It requests the Google-listed website directly, audits the site with Firecrawl and creates only evidence-backed ClickUp review tasks. Companies House is not used by this workflow, so suitable sole traders are not excluded.
+The `Daily local weak-website search` workflow uses Google Places Text Search to find established gardening, landscaping and garden-design businesses. It requests the Google-listed website directly, audits the site with Firecrawl and creates only evidence-backed ClickUp review tasks. Companies House is not used by this workflow, so suitable sole traders are not excluded.
 
-The supplied pilot configuration requires a 4.2+ Google rating, at least 10 reviews, a public role-based email on the Google-listed website domain and a website opportunity score of at least 50. Wix, Squarespace and other DIY platforms contribute to the score but never qualify a business by themselves.
+The supplied configuration requires a 4.2+ Google rating, at least 5 reviews, a public business-domain email from the official site and a website opportunity score of at least 40. Wix, Squarespace and other DIY platforms contribute to the score but never qualify a business by themselves.
 
 Add this GitHub Actions secret before running the pilot:
 
 - `GOOGLE_PLACES_API`
 
-The ClickUp board from `90121956512/v/b/6-901220291430-2` is configured with List ID `901220291430`, and Instantly campaign `2869b5e3-746b-4694-9433-9cd076472fe8` is configured for `web_design_weak_site` leads. The workflow uses the existing `FIRECRAWL_API` and `CLICK_UP_TOKEN` secrets. It is manual-only for the pilot and defaults to dry-run mode with a two-lead cap:
+The ClickUp board from `90121956512/v/b/6-901220291430-2` is configured with List ID `901220291430`, and Instantly campaign `2869b5e3-746b-4694-9433-9cd076472fe8` is configured for `web_design_weak_site` leads. The workflow uses the existing `FIRECRAWL_API` and `CLICK_UP_TOKEN` secrets. It is manual-only and defaults to dry-run mode with a two-lead cap. The location field has no default and must be entered for every run, preventing a previous town from being reused accidentally. It accepts a town, city or London suburb:
 
 ```bash
-DRY_RUN=true luminary-web-design-leads --town Sevenoaks --max-leads 2
+DRY_RUN=true luminary-web-design-leads --location Clapham --max-leads 2
 ```
 
-To change sectors or qualification thresholds, edit `config/web_design.yaml`. Dry runs audit real public data but do not create ClickUp tasks.
+To change sectors or qualification thresholds, edit `config/web_design.yaml`. Dry runs audit real public data but do not create ClickUp tasks. The campaign copy deliberately does not use a location merge field.
+
+### Five-email weak-site sequence
+
+The `Configure weak-site Instantly sequence` workflow previews the proposed sequence by default. Run it with `apply` selected to replace the campaign copy with the five-email sequence in `config/instantly_weak_site_sequence.yaml`. The sequence leads with the visible contrast between a conventional site and a motion-led Luminary site, then explains the AI-readable and SEO-ready structure beneath it. The free website audit is the conversational first step, with a separate book-a-call option.
+
+Applying the sequence does not activate the campaign or send email. ClickUp tasks still require manual approval, and the Instantly sync remains separately gated.
 
 ## Florida pilot
 
