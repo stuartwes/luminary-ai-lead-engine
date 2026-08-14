@@ -1,0 +1,89 @@
+sequences:
+  - steps:
+      - type: email
+        delay: 0
+        delay_unit: days
+        variants:
+          - subject: "Quick question about {{companyName | your business}}"
+            body: |-
+              Hi,
+
+              I came across {{companyName | your business}} while looking at landscaping companies in your area.
+
+              {{personalised_observation | I noticed an opportunity to make the route from viewing your work to requesting a quote more direct.}}
+
+              It made me wonder how you currently generate most of your new landscaping enquiries.
+
+              We build an AI Lead Engine that identifies opportunities, researches prospects and manages follow-up. The same system is how we found and researched your business.
+
+              Worth me showing you how it works?
+
+              Stuart
+
+              If this is not relevant, reply no and I will not follow up.
+      - type: email
+        delay: 3
+        delay_unit: days
+        variants:
+          - subject: "A thought for {{companyName | your business}}"
+            body: |-
+              Hi,
+
+              I had another look at {{companyName | your business}}. There appears to be an opportunity around {{primary_opportunity | creating a more proactive source of suitable enquiries}}.
+
+              Most landscaping companies rely heavily on referrals, Google and website enquiries. Those channels matter, but they often mean waiting for someone to come looking.
+
+              Our Lead Engine adds a proactive layer that continually identifies and develops new opportunities.
+
+              Would you like me to run a free AI Lead Generation Audit for the business?
+
+              Stuart
+      - type: email
+        delay: 4
+        delay_unit: days
+        variants:
+          - subject: "How I found you"
+            body: |-
+              Hi,
+
+              Something worth explaining: our Lead Engine identified {{companyName | your business}}, researched the company and highlighted why it might be useful to contact you. I reviewed that before this message went out.
+
+              That is what we build for clients: Find → Research → Qualify → Personalise → Follow up → Create an opportunity.
+
+              Instead of buying a list, you own a system that continually creates opportunities.
+
+              Would you like to see what that could look like for your business?
+
+              Stuart
+      - type: email
+        delay: 4
+        delay_unit: days
+        variants:
+          - subject: "Your AI lead score"
+            body: |-
+              Hi,
+
+              We are offering landscaping businesses a free AI Lead Generation Audit. It assesses website conversion, local visibility, lead capture, follow-up and potential customer-acquisition opportunities.
+
+              You receive a simple score and the three biggest opportunities we find, with no obligation afterwards.
+
+              Reply AUDIT and I will arrange it for you.
+
+              Stuart
+      - type: email
+        delay: 5
+        delay_unit: days
+        variants:
+          - subject: "Shall I close this?"
+            body: |-
+              Hi,
+
+              I have not heard back, so I will assume improving lead generation is not a priority at the moment. No problem at all.
+
+              If that changes, reply LEADS and I will send details of what a complete Lead Engine could look like for the business.
+
+              All the best,
+
+              Stuart
+
+              If this is not relevant, reply no and I will close this out.

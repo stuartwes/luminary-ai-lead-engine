@@ -176,6 +176,21 @@ class ClickUpClient:
             google_maps_url=self._field(
                 description, "Google Maps URL", required=False
             ),
+            lead_score=self._integer_field(description, "Lead Score"),
+            lead_class=self._field(description, "Lead Class", required=False),
+            website_status=self._field(
+                description, "Website Status", required=False
+            ),
+            sales_angle=self._field(description, "Sales Angle", required=False),
+            primary_opportunity=self._field(
+                description, "Primary Opportunity", required=False
+            ),
+            personalised_observation=self._field(
+                description, "Personalised Observation", required=False
+            ),
+            high_value_service=self._field(
+                description, "High Value Service", required=False
+            ),
         )
 
     @staticmethod

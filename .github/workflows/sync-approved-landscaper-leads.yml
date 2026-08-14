@@ -1,0 +1,36 @@
+name: Sync approved Landscaper Lead Engine prospects
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Preview approved prospects without importing"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: luminary-landscaper-lead-engine-v1-sync
+      cancel-in-progress: false
+    env:
+      CLICKUP_API_TOKEN: ${{ secrets.CLICK_UP_TOKEN }}
+      LANDSCAPER_LEAD_ENGINE_CLICKUP_LIST_ID: "901220355499"
+      INSTANTLY_API_KEY: ${{ secrets.INSTANTLY_API }}
+      LANDSCAPER_LEAD_ENGINE_INSTANTLY_CAMPAIGN_ID: "c6d4eb8f-8652-4707-8354-df592b43a033"
+      DRY_RUN: ${{ inputs.dry_run }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: pip install .
+      - name: Sync manually approved prospects
+        run: luminary-sync-landscaper-leads

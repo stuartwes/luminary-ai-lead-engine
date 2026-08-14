@@ -172,6 +172,45 @@ luminary-sync-approved --lead-type web_design_weak_site
 
 The `Sync approved leads to Instantly` workflow runs manually in dry-run mode by default. Its hourly schedule remains disabled until the repository variable `INSTANTLY_SYNC_ENABLED` is set to `true`. Enable that variable only after the campaign copy, sender accounts, schedule and unsubscribe handling are ready.
 
+## Landscaper Lead Engine V1
+
+`LuminaryAI – Landscaper Lead Engine – V1` is a third, manual-only campaign.
+It reuses Google Places, Firecrawl, ClickUp and Instantly clients, but has its
+own lead type, ClickUp List, Instantly campaign, scoring configuration,
+approval sync and five-email sequence. The existing new-business and weak-site
+workflow files and campaign routes are not changed.
+
+The dedicated ClickUp List ID `901220355499` is configured directly; ClickUp
+List IDs are routing identifiers rather than credentials. The List should be
+named `LuminaryAI – Landscaper Lead Engine – V1`. Suggested statuses are New,
+Researching, Pending Approval, Approved, Rejected, Queued, Active, Replied,
+Opportunity, Nurture, Closed and Suppressed. The integration uses a completed
+ClickUp task as the approval gate, matching the established safe workflow; the
+detailed campaign fields are written into the task body.
+
+The dedicated Instantly campaign ID
+`c6d4eb8f-8652-4707-8354-df592b43a033` is configured directly. Keep this
+campaign inactive initially. Run `Configure Landscaper Lead Engine sequence`
+in preview mode first, then with `apply` selected. Applying copy does not
+activate the campaign.
+
+Run the collector from Actions using
+`LuminaryAI – Landscaper Lead Engine – V1`. It defaults to dry run with a
+two-lead cap and has no schedule. A verified public business email is mandatory;
+an independent website is optional. Leads scoring below 65 are not written to
+ClickUp. Every accepted lead still requires manual approval before the separate
+sync workflow can import it into Instantly.
+
+Local dry run:
+
+```bash
+DRY_RUN=true luminary-landscaper-lead-engine --location Birmingham --max-leads 2
+```
+
+After reviewing and completing approved tasks, preview the isolated sync with
+`Sync approved Landscaper Lead Engine prospects`. It has no schedule and
+defaults to dry run.
+
 ## Before connecting an email sender
 
 Do not enable outreach until all of the following exist:

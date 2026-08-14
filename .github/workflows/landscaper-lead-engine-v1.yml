@@ -1,0 +1,47 @@
+name: LuminaryAI – Landscaper Lead Engine – V1
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Research prospects without creating ClickUp tasks"
+        type: boolean
+        default: true
+      max_leads:
+        description: "Maximum campaign-ready prospects"
+        type: number
+        default: 2
+      location:
+        description: "Town/city, or London suburb as 'Clapham, London'"
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    concurrency:
+      group: luminary-landscaper-lead-engine-v1
+      cancel-in-progress: false
+    env:
+      GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API }}
+      FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API }}
+      CLICKUP_API_TOKEN: ${{ secrets.CLICK_UP_TOKEN }}
+      LANDSCAPER_LEAD_ENGINE_CLICKUP_LIST_ID: "901220355499"
+      DRY_RUN: ${{ inputs.dry_run }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: pip install .
+      - name: Discover, score and prepare landscaper prospects
+        run: >-
+          luminary-landscaper-lead-engine
+          --location "${{ inputs.location }}"
+          --max-leads "${{ inputs.max_leads }}"

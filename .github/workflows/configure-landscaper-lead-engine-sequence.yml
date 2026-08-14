@@ -1,0 +1,30 @@
+name: Configure Landscaper Lead Engine sequence
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "Apply the five-email sequence without activating the campaign"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  configure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      INSTANTLY_API_KEY: ${{ secrets.INSTANTLY_API }}
+      LANDSCAPER_LEAD_ENGINE_INSTANTLY_CAMPAIGN_ID: "c6d4eb8f-8652-4707-8354-df592b43a033"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: pip install .
+      - name: Preview or apply campaign sequence
+        run: luminary-configure-landscaper-sequence ${{ inputs.apply && '--apply' || '' }}

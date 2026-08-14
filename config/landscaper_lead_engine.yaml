@@ -1,0 +1,126 @@
+workflow:
+  name: "LuminaryAI – Landscaper Lead Engine – V1"
+  campaign_id: luminaryai_landscaper_lead_engine_v1
+  enabled: false
+
+target:
+  town: Birmingham
+  industry: landscape_and_garden_design
+  query_templates:
+    - "landscaper in {town}"
+    - "landscape designer in {town}"
+    - "garden designer in {town}"
+    - "paving company in {town}"
+
+collection:
+  places_page_size: 20
+  max_pages_per_query: 1
+  max_candidates_per_run: 30
+  max_approved_leads_per_run: 30
+  minimum_rating: 0
+  minimum_review_count: 0
+  minimum_campaign_score: 65
+  email_required: true
+  website_required: false
+
+enrichment:
+  search_results: 5
+  email_search_results_without_website: 8
+  email_search_results_on_site: 8
+  pages_per_site: 4
+  retry_attempts: 3
+  retry_backoff_seconds: 2
+  rate_limit_retry_attempts: 5
+  rate_limit_backoff_seconds: 5
+  rate_limit_max_wait_seconds: 60
+  retry_jitter_seconds: 1
+  minimum_request_interval_seconds: 1
+  search_country: UK
+  search_location: "Birmingham,England,United Kingdom"
+  scrape_country: GB
+  scrape_languages: [en-GB]
+  allowed_email_prefixes: [hello, info, contact, enquiries, enquiry, office, admin, team, sales]
+  blocked_email_domains: [gmail.com, googlemail.com, outlook.com, hotmail.com, live.com, yahoo.com, icloud.com, aol.com]
+  blocked_website_domains: &blocked_domains
+    - companieshouse.gov.uk
+    - company-information.service.gov.uk
+    - linkedin.com
+    - facebook.com
+    - instagram.com
+    - x.com
+    - twitter.com
+    - yell.com
+    - yell.co.uk
+    - checkatrade.com
+    - trustatrader.com
+    - houzz.co.uk
+    - endole.co.uk
+    - companycheck.co.uk
+    - jars.lt
+    - opencorporates.com
+  blocked_email_source_domains: *blocked_domains
+
+scoring:
+  valid_business_email: 20
+  relevant_service: 15
+  active_business: 10
+  target_geography: 5
+  website_exists: 5
+  website_improvement_opportunity: 10
+  high_value_services: 10
+  good_reputation: 5
+  established_business: 5
+  decision_maker_identified: 5
+  underdeveloped_lead_generation: 10
+  high_value_terms: [landscape design, garden design, paving, driveway, artificial grass, garden room, outdoor kitchen, commercial landscaping]
+  conversion_terms: [get a quote, request a quote, book a consultation, arrange a consultation, request estimate]
+  portfolio_terms: [portfolio, gallery, case studies, our projects, recent projects, our work]
+
+prompts:
+  qualification: |-
+    Assess this UK landscaping business only from supplied evidence. Apply the configured
+    100-point rubric exactly. Never invent information. A verified business email is
+    mandatory. Return lead_score, classification, reasoning_summary, high_value_services,
+    lead_generation_weakness, recommended_sales_angle, contact_recommendation and confidence.
+  personalised_observation: |-
+    Write one factual, commercially relevant observation of no more than 30 words.
+    It must sound human, avoid criticism, create curiosity and not mention AI.
+    Use only supplied website and Google Business findings.
+
+clickup:
+  list_id_env: LANDSCAPER_LEAD_ENGINE_CLICKUP_LIST_ID
+  list_id: "901220355499"
+  task_name_prefix: "[REVIEW REQUIRED] Landscaper Lead Engine"
+  privacy_notice_url: "https://luminaryaibusiness.com/luminaryaibusiness-privacy.html"
+  market: UK
+  company_source: "Google Places and verified public business source"
+  lead_type: landscaper_lead_engine_v1
+  approval_status: completed
+  fields:
+    - Campaign ID
+    - Lead Score
+    - Lead Class
+    - Website Status
+    - Sales Angle
+    - Primary Opportunity
+    - Personalised Observation
+    - Email Verified
+    - High Value Service
+    - Decision Maker
+    - AI Confidence
+    - Approval Status
+    - Campaign Status
+    - Reply Classification
+    - Audit Requested
+    - Call Booked
+
+instantly:
+  campaign_id_env: LANDSCAPER_LEAD_ENGINE_INSTANTLY_CAMPAIGN_ID
+  campaign_id: "c6d4eb8f-8652-4707-8354-df592b43a033"
+  clickup_list_id_env: LANDSCAPER_LEAD_ENGINE_CLICKUP_LIST_ID
+  clickup_list_id: "901220355499"
+  approved_clickup_status: completed
+  lead_type: landscaper_lead_engine_v1
+  skip_if_in_workspace: true
+  verify_leads_on_import: false
+  blocked_lead_domains: *blocked_domains
