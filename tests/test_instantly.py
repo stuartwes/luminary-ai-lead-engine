@@ -89,6 +89,26 @@ def test_weak_site_audit_fields_are_sent_as_custom_variables():
     assert variables["google_review_count"] == 65
 
 
+def test_landscaper_campaign_fields_are_sent_as_custom_variables():
+    lead = approved_lead()
+    lead.lead_type = "landscaper_lead_engine_v1"
+    lead.lead_score = 82
+    lead.lead_class = "A"
+    lead.website_status = "opportunity"
+    lead.sales_angle = "conversion"
+    lead.primary_opportunity = "No prominent quote route was detected"
+    lead.personalised_observation = "Your project work could connect more directly to an enquiry."
+    lead.high_value_service = "garden design"
+    session = FakeSession({"leads_uploaded": 1, "created_leads": [{"id": "lead-1"}]})
+
+    InstantlyClient("secret", "campaign-1", {}, session=session).add_lead(lead)
+
+    variables = session.last_request[1]["json"]["leads"][0]["custom_variables"]
+    assert variables["lead_score"] == 82
+    assert variables["personalised_observation"].startswith("Your project")
+    assert variables["primary_opportunity"].startswith("No prominent")
+
+
 def test_blocklisted_lead_is_reported_as_suppressed():
     assert InstantlyClient.outcome({"leads_uploaded": 0, "in_blocklist": 1}) == (
         "suppressed by Instantly blocklist"

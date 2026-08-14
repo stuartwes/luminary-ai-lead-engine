@@ -81,3 +81,10 @@ class ApprovedLead:
     google_rating: str = ""
     google_review_count: int = 0
     google_maps_url: str = ""
+    lead_score: int = 0
+    lead_class: str = ""
+    website_status: str = ""
+    sales_angle: str = ""
+    primary_opportunity: str = ""
+    personalised_observation: str = ""
+    high_value_service: str = ""

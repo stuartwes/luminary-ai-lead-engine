@@ -22,6 +22,9 @@ luminary-florida-leads = "luminary_leads.florida_cli:main"
 luminary-sync-approved = "luminary_leads.sync_cli:main"
 luminary-web-design-leads = "luminary_leads.web_design_cli:main"
 luminary-configure-weak-site-sequence = "luminary_leads.sequence_cli:main"
+luminary-landscaper-lead-engine = "luminary_leads.landscaper_cli:main"
+luminary-sync-landscaper-leads = "luminary_leads.landscaper_sync_cli:main"
+luminary-configure-landscaper-sequence = "luminary_leads.landscaper_sequence_cli:main"
 
 [tool.setuptools.packages.find]
 include = ["luminary_leads*"]

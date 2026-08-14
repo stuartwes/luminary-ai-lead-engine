@@ -53,6 +53,13 @@ class InstantlyClient:
                         "google_rating": lead.google_rating,
                         "google_review_count": lead.google_review_count,
                         "google_maps_url": lead.google_maps_url,
+                        "lead_score": lead.lead_score,
+                        "lead_class": lead.lead_class,
+                        "website_status": lead.website_status,
+                        "sales_angle": lead.sales_angle,
+                        "primary_opportunity": lead.primary_opportunity,
+                        "personalised_observation": lead.personalised_observation,
+                        "high_value_service": lead.high_value_service,
                     },
                 }
             ],
