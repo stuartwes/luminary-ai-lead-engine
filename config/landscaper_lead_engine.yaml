@@ -3,6 +3,15 @@ workflow:
   campaign_id: luminaryai_landscaper_lead_engine_v1
   enabled: false
 
+schedule:
+  timezone: Europe/London
+  local_hour: 8
+  start_date: "2026-08-15"
+  daily_max_leads: 30
+  location_files:
+    - data/landscaper_locations/uk_towns_cities_over_20000.csv
+    - data/landscaper_locations/london_boroughs_over_20000.csv
+
 target:
   town: Birmingham
   industry: landscape_and_garden_design
