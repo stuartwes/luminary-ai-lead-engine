@@ -118,6 +118,10 @@ class ClickUpClient:
 
     def _approved_lead(self, task: dict) -> ApprovedLead:
         description = str(task.get("description") or "")
+        lead_type = (
+            self._field(description, "Lead type", required=False)
+            or "ai_business_lab"
+        )
         company_number = (
             self._field(description, "Lead record ID", required=False)
             or self._field(description, "Company number")
@@ -137,7 +141,14 @@ class ClickUpClient:
             task_description=description,
             company_number=company_number,
             company_name=company_name,
-            incorporated_on=self._field(description, "Incorporated"),
+            incorporated_on=(
+                self._field(description, "Incorporated", required=False)
+                or (
+                    "Not supplied"
+                    if lead_type == "landscaper_lead_engine_v1"
+                    else self._field(description, "Incorporated")
+                )
+            ),
             industry=self._field(description, "Industry segment"),
             postcode=(
                 self._field(description, "Business postcode", required=False)
@@ -154,10 +165,7 @@ class ClickUpClient:
                 self._field(description, "Privacy notice", required=False)
                 or str(self.config["privacy_notice_url"])
             ),
-            lead_type=(
-                self._field(description, "Lead type", required=False)
-                or "ai_business_lab"
-            ),
+            lead_type=lead_type,
             website_platform=self._field(
                 description, "Website platform", required=False
             ),

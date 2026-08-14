@@ -331,3 +331,42 @@ Primary website issue: No project portfolio detected
     assert lead.opportunity_score == 75
     assert lead.website_platform == "Wix"
     assert lead.google_review_count == 65
+
+
+def test_clickup_allows_landscaper_approval_without_incorporation_date():
+    session = FakeSession(
+        {
+            "tasks": [
+                {
+                    "id": "task-landscaper",
+                    "name": "[REVIEW REQUIRED] Landscaper Lead Engine: Birmingham Gardens [LLE123]",
+                    "description": """Lead record ID: LLE123
+Industry segment: landscaping
+Business postcode: B1 1AA
+Lead type: landscaper_lead_engine_v1
+Website: https://birminghamgardens.co.uk
+Public corporate email: hello@birminghamgardens.co.uk
+Email source: https://birminghamgardens.co.uk/contact
+Privacy notice: https://example.com/privacy
+""",
+                    "status": {"status": "completed"},
+                }
+            ]
+        }
+    )
+    client = ClickUpClient(
+        "secret",
+        "list-id",
+        {
+            "task_name_prefix": "[REVIEW REQUIRED] Landscaper Lead Engine",
+            "privacy_notice_url": "https://example.com/privacy",
+        },
+        session=session,
+    )
+
+    lead = client.approved_leads(
+        "completed", required_lead_type="landscaper_lead_engine_v1"
+    )[0]
+
+    assert lead.incorporated_on == "Not supplied"
+    assert lead.company_name == "Birmingham Gardens"
