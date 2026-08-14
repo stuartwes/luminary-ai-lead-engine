@@ -12,9 +12,14 @@ on:
         type: number
         default: 2
       location:
-        description: "Town/city, or London suburb as 'Clapham, London'"
+        description: "Optional town/city override; blank uses today's queue location"
         type: string
-        required: true
+        required: false
+  schedule:
+    # Two UTC triggers keep the run at 08:00 Europe/London across clock changes.
+    # The selector permits only the trigger that maps to 08:00 on that date.
+    - cron: "0 7 * * *"
+    - cron: "0 8 * * *"
 
 permissions:
   contents: read
@@ -31,7 +36,10 @@ jobs:
       FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API }}
       CLICKUP_API_TOKEN: ${{ secrets.CLICK_UP_TOKEN }}
       LANDSCAPER_LEAD_ENGINE_CLICKUP_LIST_ID: "901220355499"
-      DRY_RUN: ${{ inputs.dry_run }}
+      DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || inputs.dry_run }}
+      LOCATION_OVERRIDE: ${{ inputs.location }}
+      SCHEDULED_CRON: ${{ github.event.schedule }}
+      MAX_LEADS: ${{ github.event_name == 'schedule' && 30 || inputs.max_leads }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -40,8 +48,16 @@ jobs:
           cache: pip
       - name: Install
         run: pip install .
+      - name: Select today's location
+        id: location
+        run: >-
+          luminary-select-landscaper-location
+          --manual-location "$LOCATION_OVERRIDE"
+          --scheduled-cron "$SCHEDULED_CRON"
+          --github-output "$GITHUB_OUTPUT"
       - name: Discover, score and prepare landscaper prospects
+        if: steps.location.outputs.should_run == 'true'
         run: >-
           luminary-landscaper-lead-engine
-          --location "${{ inputs.location }}"
-          --max-leads "${{ inputs.max_leads }}"
+          --location "${{ steps.location.outputs.location }}"
+          --max-leads "$MAX_LEADS"

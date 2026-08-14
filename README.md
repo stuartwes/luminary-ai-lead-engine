@@ -196,10 +196,19 @@ activate the campaign.
 
 Run the collector from Actions using
 `LuminaryAI – Landscaper Lead Engine – V1`. It defaults to dry run with a
-two-lead cap and has no schedule. A verified public business email is mandatory;
+two-lead cap for manual runs. A verified public business email is mandatory;
 an independent website is optional. Leads scoring below 65 are not written to
 ClickUp. Every accepted lead still requires manual approval before the separate
 sync workflow can import it into Instantly.
+
+The collector also runs automatically at 08:00 Europe/London each day with a
+30-lead cap. It selects the next location from the two population-over-20,000
+CSV files in `data/landscaper_locations`, starting with Birmingham on
+15 August 2026. The 528 non-London locations are followed by the 32 London
+boroughs, after which the 560-location queue cycles. Two UTC cron triggers cover
+British Summer Time and Greenwich Mean Time; an internal gate permits only the
+trigger that maps to 08:00 locally. Scheduled collection creates ClickUp review
+tasks only and never bypasses the separate approval-to-Instantly workflow.
 
 Local dry run:
 

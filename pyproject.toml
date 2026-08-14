@@ -25,6 +25,7 @@ luminary-configure-weak-site-sequence = "luminary_leads.sequence_cli:main"
 luminary-landscaper-lead-engine = "luminary_leads.landscaper_cli:main"
 luminary-sync-landscaper-leads = "luminary_leads.landscaper_sync_cli:main"
 luminary-configure-landscaper-sequence = "luminary_leads.landscaper_sequence_cli:main"
+luminary-select-landscaper-location = "luminary_leads.landscaper_schedule:main"
 
 [tool.setuptools.packages.find]
 include = ["luminary_leads*"]

@@ -28,7 +28,7 @@ def main() -> int:
         raise ValueError("--max-leads must be at least 1")
     config = load_config(args.config)
     config["target"]["town"] = args.location.strip()
-    config["enrichment"]["search_location"] = f"{args.location.strip()},England,United Kingdom"
+    config["enrichment"]["search_location"] = f"{args.location.strip()},United Kingdom"
     config["collection"]["max_approved_leads_per_run"] = args.max_leads
     env_dry_run = os.getenv("DRY_RUN", "true").casefold() not in {"false", "0", "no"}
     dry_run = args.dry_run or env_dry_run
