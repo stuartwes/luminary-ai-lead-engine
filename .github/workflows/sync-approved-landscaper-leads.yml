@@ -7,6 +7,10 @@ on:
         description: "Preview approved prospects without importing"
         type: boolean
         default: true
+  schedule:
+    # Paired UTC triggers keep the live sync at 18:00 Europe/London.
+    - cron: "0 17 * * *"
+    - cron: "0 18 * * *"
 
 permissions:
   contents: read
@@ -23,7 +27,8 @@ jobs:
       LANDSCAPER_LEAD_ENGINE_CLICKUP_LIST_ID: "901220355499"
       INSTANTLY_API_KEY: ${{ secrets.INSTANTLY_API }}
       LANDSCAPER_LEAD_ENGINE_INSTANTLY_CAMPAIGN_ID: "c6d4eb8f-8652-4707-8354-df592b43a033"
-      DRY_RUN: ${{ inputs.dry_run }}
+      DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || inputs.dry_run }}
+      SCHEDULED_CRON: ${{ github.event.schedule }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -32,5 +37,14 @@ jobs:
           cache: pip
       - name: Install
         run: pip install .
-      - name: Sync manually approved prospects
+      - name: Keep sync at 18:00 UK time
+        id: schedule
+        run: >-
+          luminary-schedule-gate
+          --scheduled-cron "$SCHEDULED_CRON"
+          --timezone "Europe/London"
+          --local-hour 18
+          --github-output "$GITHUB_OUTPUT"
+      - name: Sync approved prospects
+        if: steps.schedule.outputs.should_run == 'true'
         run: luminary-sync-landscaper-leads

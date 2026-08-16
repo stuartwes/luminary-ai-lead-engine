@@ -217,8 +217,12 @@ DRY_RUN=true luminary-landscaper-lead-engine --location Birmingham --max-leads 2
 ```
 
 After reviewing and completing approved tasks, preview the isolated sync with
-`Sync approved Landscaper Lead Engine prospects`. It has no schedule and
-defaults to dry run.
+`Sync approved Landscaper Lead Engine prospects`. It defaults to dry run when
+launched manually. The same isolated workflow now runs
+live each day at 18:00 Europe/London, importing only completed tasks that have
+not already received an Instantly outcome marker. This keeps ClickUp completion
+as the human approval gate while removing the need to launch the transfer
+manually.
 
 ## Before connecting an email sender
 
