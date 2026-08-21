@@ -1,0 +1,90 @@
+sequences:
+  - steps:
+      - type: email
+        delay: 0
+        delay_unit: days
+        variants:
+          - subject: "A thought about {{companyName | your landscaping business}}"
+            body: |-
+              Hi,
+
+              I spent some time looking through {{companyName | your business}} rather than just glancing at the homepage.
+
+              {{personalised_observation | I noticed a specific opportunity to connect the work you already showcase with a more proactive source of suitable enquiries.}}
+
+              We build AI Lead Engines for landscaping businesses, and the research above is part of the same system we use to identify and qualify opportunities.
+
+              Worth me showing you what it found?
+
+              Stuart
+
+              If this is not relevant, reply no and I will not follow up.
+      - type: email
+        delay: 3
+        delay_unit: days
+        variants:
+          - subject: "The opportunity I noticed"
+            body: |-
+              Hi,
+
+              The main opportunity I identified for {{companyName | your business}} was {{primary_opportunity | creating a more proactive source of suitable landscaping enquiries}}.
+
+              Your specialist work includes {{specialist_services | landscaping and garden projects}}, which gives us something much more useful to build a campaign around than a generic “we do landscaping” message.
+
+              The aim would be to identify the right prospects, research their needs and start relevant conversations around the work you actually want more of.
+
+              Would you like me to outline how that could work?
+
+              Stuart
+      - type: email
+        delay: 4
+        delay_unit: days
+        variants:
+          - subject: "Why I contacted {{companyName | you}}"
+            body: |-
+              Hi,
+
+              A quick explanation of why I contacted you specifically.
+
+              Our system reviewed your wider website — including service, project and company pages — and identified details that distinguish the business, including {{differentiators | the specialist work and evidence presented across your site}}.
+
+              It then researched, qualified and prepared the approach before I reviewed it.
+
+              That is the Lead Engine model: Find → Research → Qualify → Personalise → Follow up → Create an opportunity.
+
+              Would a short example be useful?
+
+              Stuart
+      - type: email
+        delay: 4
+        delay_unit: days
+        variants:
+          - subject: "A tailored lead-generation audit"
+            body: |-
+              Hi,
+
+              Based on the research, another useful angle for {{companyName | your business}} could be {{alternative_outreach_angle | improving how your strongest services are presented to potential customers}}.
+
+              I can turn this into a free AI Lead Generation Audit covering your website conversion, local visibility, lead capture, follow-up and proactive customer-acquisition opportunities.
+
+              Reply AUDIT and I will prepare it, or use:
+              https://www.landscapeleadgeneration.co.uk
+
+              Stuart
+      - type: email
+        delay: 5
+        delay_unit: days
+        variants:
+          - subject: "Shall I close this?"
+            body: |-
+              Hi,
+
+              I have not heard back, so I will close this out for now.
+
+              If creating a more predictable source of enquiries becomes a priority for {{companyName | the business}}, reply LEADS and I will send the personalised outline based on the research already completed.
+
+              All the best,
+
+              Stuart
+
+              If this is not relevant, reply no and I will close this out.

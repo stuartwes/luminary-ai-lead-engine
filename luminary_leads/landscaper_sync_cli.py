@@ -13,10 +13,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Sync approved Landscaper Lead Engine prospects")
     parser.add_argument("--config", default="config/landscaper_lead_engine.yaml")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--route", choices=("standard", "deep_research"), default="standard")
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     config = load_config(args.config)
-    route = config["instantly"]
+    route = config["instantly_deep_research"] if args.route == "deep_research" else config["instantly"]
     dry_run = args.dry_run or os.getenv("DRY_RUN", "true").casefold() not in {"false", "0", "no"}
     token = os.getenv("CLICKUP_API_TOKEN", "").strip()
     list_id = os.getenv(route["clickup_list_id_env"], "").strip() or str(
@@ -34,7 +35,12 @@ def main() -> int:
     if dry_run and missing:
         logging.info("Preview configuration valid; live credentials were not required")
         return 0
-    leads = clickup.approved_leads(route["approved_clickup_status"], required_lead_type=route["lead_type"])
+    leads = clickup.approved_leads(
+        route["approved_clickup_status"],
+        required_lead_type=route["lead_type"],
+        required_research_mode=route.get("required_research_mode"),
+        excluded_research_modes=set(route.get("excluded_research_modes") or []),
+    )
     for lead in leads:
         if dry_run:
             logging.info("Dry run: would import %s", lead.company_name)

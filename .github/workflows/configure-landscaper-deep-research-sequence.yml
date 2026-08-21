@@ -1,0 +1,34 @@
+name: Configure Landscaper Deep Research sequence
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "Apply the personalised five-email sequence without activating the campaign"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  configure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      INSTANTLY_API_KEY: ${{ secrets.INSTANTLY_API }}
+      LANDSCAPER_DEEP_RESEARCH_INSTANTLY_CAMPAIGN_ID: "16d5426b-076d-42a7-b905-f1cfc25e63cf"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: pip install .
+      - name: Preview or apply personalised campaign sequence
+        run: >-
+          luminary-configure-landscaper-sequence
+          --config config/instantly_landscaper_deep_research_sequence.yaml
+          --campaign-id "$LANDSCAPER_DEEP_RESEARCH_INSTANTLY_CAMPAIGN_ID"
+          ${{ inputs.apply && '--apply' || '' }}

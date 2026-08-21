@@ -151,6 +151,19 @@ instantly:
   clickup_list_id: "901220355499"
   approved_clickup_status: completed
   lead_type: landscaper_lead_engine_v1
+  excluded_research_modes: [deep_research_v2]
+  skip_if_in_workspace: true
+  verify_leads_on_import: false
+  blocked_lead_domains: *blocked_domains
+
+instantly_deep_research:
+  campaign_id_env: LANDSCAPER_DEEP_RESEARCH_INSTANTLY_CAMPAIGN_ID
+  campaign_id: "16d5426b-076d-42a7-b905-f1cfc25e63cf"
+  clickup_list_id_env: LANDSCAPER_LEAD_ENGINE_CLICKUP_LIST_ID
+  clickup_list_id: "901220355499"
+  approved_clickup_status: completed
+  lead_type: landscaper_lead_engine_v1
+  required_research_mode: deep_research_v2
   skip_if_in_workspace: true
   verify_leads_on_import: false
   blocked_lead_domains: *blocked_domains

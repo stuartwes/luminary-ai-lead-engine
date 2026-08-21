@@ -68,7 +68,11 @@ class ClickUpClient:
         return response.json()
 
     def approved_leads(
-        self, status: str, required_lead_type: str | None = None
+        self,
+        status: str,
+        required_lead_type: str | None = None,
+        required_research_mode: str | None = None,
+        excluded_research_modes: set[str] | None = None,
     ) -> list[ApprovedLead]:
         page = 0
         leads: list[ApprovedLead] = []
@@ -97,7 +101,13 @@ class ClickUpClient:
                 )
                 if required_lead_type and lead_type.casefold() != required_lead_type.casefold():
                     continue
-                leads.append(self._approved_lead(task))
+                lead = self._approved_lead(task)
+                if required_research_mode and lead.research_mode.casefold() != required_research_mode.casefold():
+                    continue
+                excluded = {value.casefold() for value in (excluded_research_modes or set())}
+                if lead.research_mode.casefold() in excluded:
+                    continue
+                leads.append(lead)
             if len(tasks) < 100:
                 break
             page += 1
