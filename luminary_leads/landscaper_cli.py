@@ -44,9 +44,16 @@ def main() -> int:
     list_id = os.getenv(str(config["clickup"]["list_id_env"]), "").strip() or str(
         config["clickup"].get("list_id") or ""
     )
-    missing = [name for name, value in (("GOOGLE_PLACES_API_KEY", places_key), ("FIRECRAWL_API_KEY", firecrawl_key)) if not value]
-    if not dry_run:
-        missing.extend(name for name, value in (("CLICKUP_API_TOKEN", clickup_token), (config["clickup"]["list_id_env"], list_id)) if not value)
+    missing = [
+        name
+        for name, value in (
+            ("GOOGLE_PLACES_API_KEY", places_key),
+            ("FIRECRAWL_API_KEY", firecrawl_key),
+            ("CLICKUP_API_TOKEN", clickup_token),
+            (config["clickup"]["list_id_env"], list_id),
+        )
+        if not value
+    ]
     if args.deep_research and not openai_key:
         missing.append("OPENAI_API_KEY")
     if missing:
