@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import hashlib
+import logging
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from urllib.parse import urljoin, urlparse
 
 from .firecrawl import EMAIL_RE, FirecrawlClient
+from .deep_research import OpenAIDeepResearchClient, select_research_urls
 from .models import Company, PlaceBusiness
+
+LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
@@ -28,13 +32,23 @@ class LandscaperLead:
     primary_opportunity: str
     personalised_observation: str
     high_value_services: list[str]
+    research_mode: str = "standard"
+    business_summary: str = ""
+    ideal_customers: list[str] = field(default_factory=list)
+    differentiators: list[str] = field(default_factory=list)
+    recent_activity: str = ""
+    research_evidence: str = ""
+    evidence_url: str = ""
+    research_confidence: int = 0
+    alternative_angle: str = ""
     lead_type: str = "landscaper_lead_engine_v1"
 
 
 class LandscaperLeadEvaluator:
-    def __init__(self, firecrawl: FirecrawlClient, config: dict) -> None:
+    def __init__(self, firecrawl: FirecrawlClient, config: dict, deep_research: OpenAIDeepResearchClient | None = None) -> None:
         self.firecrawl = firecrawl
         self.config = config
+        self.deep_research = deep_research
 
     def qualify(self, place: PlaceBusiness, industry: str) -> LandscaperLead | None:
         company = self._business_record(place)
@@ -43,7 +57,12 @@ class LandscaperLeadEvaluator:
         if website:
             homepage = self.firecrawl.scrape(website)
             pages.append((website, homepage))
-            for link in homepage.get("links") or []:
+            links = homepage.get("links") or []
+            if self.deep_research:
+                links = self.firecrawl.map_site(website, int(self.config["deep_research"].get("map_limit", 100)))
+                selected = select_research_urls(website, links, int(self.config["deep_research"].get("max_pages", 12)))
+                pages = [(website, homepage)] + [(url, self.firecrawl.scrape(url)) for url in selected if url.rstrip("/") != website.rstrip("/")]
+            for link in ([] if self.deep_research else links):
                 if not isinstance(link, str):
                     continue
                 absolute = urljoin(website, link)
@@ -86,6 +105,16 @@ class LandscaperLeadEvaluator:
         primary = opportunities[0] if opportunities else "A proactive source of suitable new-business opportunities"
         angle = self._sales_angle(website_status, services, opportunities)
         observation = self._observation(place, website_status, opportunities)
+        research = None
+        if self.deep_research and website:
+            try:
+                research = self.deep_research.research(place.name, website, [(url, self._page_text(page)) for url, page in pages])
+            except Exception:
+                LOGGER.exception("Deep research failed for %s; using standard personalisation", place.name)
+            if research:
+                primary = research.primary_opportunity
+                observation = research.personalised_observation
+                services = research.specialist_services or services
         return LandscaperLead(
             company=company,
             website=website,
@@ -104,6 +133,15 @@ class LandscaperLeadEvaluator:
             primary_opportunity=primary,
             personalised_observation=observation,
             high_value_services=services,
+            research_mode=("deep_research_v2" if research else "standard_fallback" if self.deep_research else "standard"),
+            business_summary=research.business_summary if research else "",
+            ideal_customers=research.ideal_customers if research else [],
+            differentiators=research.differentiators if research else [],
+            recent_activity=research.recent_activity if research else "",
+            research_evidence=research.evidence_text if research else "",
+            evidence_url=research.evidence_url if research else "",
+            research_confidence=research.confidence if research else 0,
+            alternative_angle=research.alternative_angle if research else "",
         )
 
     def _score(self, place: PlaceBusiness, website: str, content: str) -> tuple[int, list[str], list[str]]:

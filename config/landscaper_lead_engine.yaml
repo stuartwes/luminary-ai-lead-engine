@@ -69,6 +69,17 @@ enrichment:
     - opencorporates.com
   blocked_email_source_domains: *blocked_domains
 
+deep_research:
+  enabled: false
+  model: gpt-5.6-sol
+  pilot_max_leads: 10
+  max_pages: 12
+  map_limit: 100
+  max_chars_per_page: 8000
+  max_total_chars: 60000
+  minimum_confidence: 75
+  request_timeout_seconds: 90
+
 scoring:
   valid_business_email: 20
   relevant_service: 15
@@ -122,6 +133,16 @@ clickup:
     - Reply Classification
     - Audit Requested
     - Call Booked
+    - Research Mode
+    - Business Summary
+    - Ideal Customers
+    - Specialist Services
+    - Differentiators
+    - Recent Activity
+    - Research Evidence
+    - Evidence URL
+    - Research Confidence
+    - Alternative Outreach Angle
 
 instantly:
   campaign_id_env: LANDSCAPER_LEAD_ENGINE_INSTANTLY_CAMPAIGN_ID
