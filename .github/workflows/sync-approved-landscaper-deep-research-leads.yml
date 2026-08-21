@@ -1,0 +1,49 @@
+name: Sync approved Landscaper Deep Research prospects
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Preview approved Deep Research prospects without importing"
+        type: boolean
+        default: true
+  schedule:
+    - cron: "5 17 * * *"
+    - cron: "5 18 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: luminary-landscaper-deep-research-sync
+      cancel-in-progress: false
+    env:
+      CLICKUP_API_TOKEN: ${{ secrets.CLICK_UP_TOKEN }}
+      LANDSCAPER_LEAD_ENGINE_CLICKUP_LIST_ID: "901220355499"
+      INSTANTLY_API_KEY: ${{ secrets.INSTANTLY_API }}
+      LANDSCAPER_DEEP_RESEARCH_INSTANTLY_CAMPAIGN_ID: "16d5426b-076d-42a7-b905-f1cfc25e63cf"
+      DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || inputs.dry_run }}
+      SCHEDULED_CRON: ${{ github.event.schedule }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: pip install .
+      - name: Keep sync at 18:05 UK time
+        id: schedule
+        run: >-
+          luminary-schedule-gate
+          --scheduled-cron "$SCHEDULED_CRON"
+          --timezone "Europe/London"
+          --local-hour 18
+          --github-output "$GITHUB_OUTPUT"
+      - name: Sync approved Deep Research prospects
+        if: steps.schedule.outputs.should_run == 'true'
+        run: luminary-sync-landscaper-leads --route deep_research

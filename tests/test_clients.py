@@ -370,3 +370,51 @@ Privacy notice: https://example.com/privacy
 
     assert lead.incorporated_on == "Not supplied"
     assert lead.company_name == "Birmingham Gardens"
+
+
+def test_clickup_routes_deep_research_leads_without_crossing_campaigns():
+    session = FakeSession(
+        {
+            "tasks": [
+                {
+                    "id": "task-deep",
+                    "name": "[REVIEW REQUIRED] Landscaper Lead Engine: Nottingham Gardens [LLE456]",
+                    "description": """Lead record ID: LLE456
+Industry segment: landscaping
+Business postcode: NG1 1AA
+Lead type: landscaper_lead_engine_v1
+Website: https://nottinghamgardens.co.uk
+Public corporate email: hello@nottinghamgardens.co.uk
+Email source: https://nottinghamgardens.co.uk/contact
+Privacy notice: https://example.com/privacy
+Research Mode: deep_research_v2
+Personalised Observation: A specific researched observation.
+""",
+                    "status": {"status": "completed"},
+                }
+            ]
+        }
+    )
+    client = ClickUpClient(
+        "secret",
+        "list-id",
+        {
+            "task_name_prefix": "[REVIEW REQUIRED] Landscaper Lead Engine",
+            "privacy_notice_url": "https://example.com/privacy",
+        },
+        session=session,
+    )
+
+    deep = client.approved_leads(
+        "completed",
+        required_lead_type="landscaper_lead_engine_v1",
+        required_research_mode="deep_research_v2",
+    )
+    standard = client.approved_leads(
+        "completed",
+        required_lead_type="landscaper_lead_engine_v1",
+        excluded_research_modes={"deep_research_v2"},
+    )
+
+    assert [lead.task_id for lead in deep] == ["task-deep"]
+    assert standard == []
