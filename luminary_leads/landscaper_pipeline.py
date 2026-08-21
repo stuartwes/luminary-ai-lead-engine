@@ -26,8 +26,13 @@ class LandscaperLeadPipeline:
             page_size=int(collection.get("places_page_size", 20)),
             max_pages_per_query=int(collection.get("max_pages_per_query", 1)),
         )
-        existing = set() if dry_run else self.clickup.existing_company_numbers()
+        # Preview and live runs must use the same duplicate rules; otherwise a
+        # dry run overstates how many genuinely new ClickUp records will exist.
+        existing = self.clickup.existing_company_numbers()
         accepted: list[LandscaperLead] = []
+        duplicate_count = 0
+        rejected_count = 0
+        failed_count = 0
         for place in discovered[: int(collection.get("max_candidates_per_run", 30))]:
             if len(accepted) >= int(collection.get("max_approved_leads_per_run", 30)):
                 break
@@ -40,16 +45,28 @@ class LandscaperLeadPipeline:
                 continue
             record_id = LandscaperLeadEvaluator._business_record(place).company_number
             if record_id in existing:
+                duplicate_count += 1
                 continue
             try:
                 lead = self.evaluator.qualify(place, str(self.config["target"]["industry"]))
                 if not lead:
+                    rejected_count += 1
                     continue
                 self._create_task(lead, dry_run=dry_run)
                 accepted.append(lead)
                 existing.add(record_id)
             except Exception:
+                failed_count += 1
                 LOGGER.exception("Failed to process landscaper %s", place.name)
+        LOGGER.info(
+            "Candidate summary: discovered=%d inspected=%d existing=%d rejected=%d failed=%d accepted=%d",
+            len(discovered),
+            min(len(discovered), int(collection.get("max_candidates_per_run", 30))),
+            duplicate_count,
+            rejected_count,
+            failed_count,
+            len(accepted),
+        )
         return accepted
 
     def _create_task(self, lead: LandscaperLead, *, dry_run: bool) -> dict:
