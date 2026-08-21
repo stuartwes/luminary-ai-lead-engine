@@ -199,6 +199,16 @@ class ClickUpClient:
             high_value_service=self._field(
                 description, "High Value Service", required=False
             ),
+            research_mode=self._field(description, "Research Mode", required=False),
+            business_summary=self._field(description, "Business Summary", required=False),
+            ideal_customers=self._field(description, "Ideal Customers", required=False),
+            specialist_services=self._field(description, "Specialist Services", required=False),
+            differentiators=self._field(description, "Differentiators", required=False),
+            recent_activity=self._field(description, "Recent Activity", required=False),
+            research_evidence=self._field(description, "Research Evidence", required=False),
+            evidence_url=self._field(description, "Evidence URL", required=False),
+            research_confidence=self._integer_field(description, "Research Confidence"),
+            alternative_outreach_angle=self._field(description, "Alternative Outreach Angle", required=False),
         )
 
     @staticmethod

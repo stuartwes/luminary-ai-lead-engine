@@ -237,6 +237,22 @@ class FirecrawlClient:
         """Scrape a known company URL using the configured safety and retry policy."""
         return self._scrape(url)
 
+    def map_site(self, url: str, limit: int = 100) -> list[str]:
+        """Return discoverable URLs for a known company site."""
+        payload = {
+            "url": url,
+            "sitemap": "include",
+            "includeSubdomains": False,
+            "ignoreQueryParameters": True,
+            "limit": limit,
+        }
+        data = self._post_json("map", payload).get("links") or []
+        return [
+            str(item.get("url") if isinstance(item, dict) else item)
+            for item in data
+            if (item.get("url") if isinstance(item, dict) else item)
+        ]
+
     def email_allowed(self, email: str, website: str) -> bool:
         return self._email_allowed(email, website)
 

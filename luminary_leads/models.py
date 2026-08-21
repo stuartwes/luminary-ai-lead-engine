@@ -88,3 +88,13 @@ class ApprovedLead:
     primary_opportunity: str = ""
     personalised_observation: str = ""
     high_value_service: str = ""
+    research_mode: str = ""
+    business_summary: str = ""
+    ideal_customers: str = ""
+    specialist_services: str = ""
+    differentiators: str = ""
+    recent_activity: str = ""
+    research_evidence: str = ""
+    evidence_url: str = ""
+    research_confidence: int = 0
+    alternative_outreach_angle: str = ""

@@ -15,6 +15,10 @@ on:
         description: "Optional town/city override; blank uses today's queue location"
         type: string
         required: false
+      deep_research:
+        description: "Use evidence-checked Deep Research V2 (maximum 10 leads)"
+        type: boolean
+        default: false
   schedule:
     # Two UTC triggers keep the run at 08:00 Europe/London across clock changes.
     # The selector permits only the trigger that maps to 08:00 on that date.
@@ -34,6 +38,7 @@ jobs:
     env:
       GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API }}
       FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API }}
+      OPENAI_API_KEY: ${{ secrets.OPEN_AI_KEY }}
       CLICKUP_API_TOKEN: ${{ secrets.CLICK_UP_TOKEN }}
       LANDSCAPER_LEAD_ENGINE_CLICKUP_LIST_ID: "901220355499"
       DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || inputs.dry_run }}
@@ -61,3 +66,4 @@ jobs:
           luminary-landscaper-lead-engine
           --location "${{ steps.location.outputs.location }}"
           --max-leads "$MAX_LEADS"
+          ${{ inputs.deep_research && '--deep-research' || '' }}

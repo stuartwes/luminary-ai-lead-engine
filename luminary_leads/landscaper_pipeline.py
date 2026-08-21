@@ -56,6 +56,8 @@ class LandscaperLeadPipeline:
         cfg = self.config["clickup"]
         task_name = f'{cfg["task_name_prefix"]}: {lead.company.name} [{lead.company.company_number}]'
         services = ", ".join(lead.high_value_services) or "Not detected"
+        ideal_customers = ", ".join(lead.ideal_customers or []) or "Not established"
+        differentiators = ", ".join(lead.differentiators or []) or "Not established"
         description = f"""## Review before outreach
 
 Lead record ID: {lead.company.company_number}
@@ -78,6 +80,16 @@ Primary Opportunity: {lead.primary_opportunity}
 Personalised Observation: {lead.personalised_observation}
 High Value Service: {services}
 AI Confidence: {lead.confidence}/100
+Research Mode: {lead.research_mode}
+Business Summary: {lead.business_summary or 'Not available'}
+Ideal Customers: {ideal_customers}
+Specialist Services: {services}
+Differentiators: {differentiators}
+Recent Activity: {lead.recent_activity or 'Not established'}
+Research Evidence: {lead.research_evidence or 'Not available'}
+Evidence URL: {lead.evidence_url or 'Not available'}
+Research Confidence: {lead.research_confidence}/100
+Alternative Outreach Angle: {lead.alternative_angle or 'Not available'}
 Approval Status: Pending
 Campaign Status: Ready
 
