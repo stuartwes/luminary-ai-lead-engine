@@ -8,6 +8,7 @@ from urllib.parse import urljoin, urlparse
 
 from .firecrawl import EMAIL_RE, FirecrawlClient
 from .deep_research import OpenAIDeepResearchClient, select_research_urls
+from .personalisation import OpenAIPersonalisationClient
 from .models import Company, PlaceBusiness
 
 LOGGER = logging.getLogger(__name__)
@@ -41,14 +42,25 @@ class LandscaperLead:
     evidence_url: str = ""
     research_confidence: int = 0
     alternative_angle: str = ""
+    personalised_subject_line: str = ""
+    icebreaker: str = ""
+    relevance_bridge: str = ""
+    personalised_value_proposition: str = ""
+    personalised_cta: str = ""
+    target_customer_angle: str = ""
+    personalisation_evidence: str = ""
+    personalisation_evidence_url: str = ""
+    personalisation_confidence: int = 0
+    personalisation_rejection_reason: str = ""
     lead_type: str = "landscaper_lead_engine_v1"
 
 
 class LandscaperLeadEvaluator:
-    def __init__(self, firecrawl: FirecrawlClient, config: dict, deep_research: OpenAIDeepResearchClient | None = None) -> None:
+    def __init__(self, firecrawl: FirecrawlClient, config: dict, deep_research: OpenAIDeepResearchClient | None = None, personalisation: OpenAIPersonalisationClient | None = None) -> None:
         self.firecrawl = firecrawl
         self.config = config
         self.deep_research = deep_research
+        self.personalisation = personalisation
 
     def qualify(self, place: PlaceBusiness, industry: str) -> LandscaperLead | None:
         company = self._business_record(place)
@@ -106,6 +118,7 @@ class LandscaperLeadEvaluator:
         angle = self._sales_angle(website_status, services, opportunities)
         observation = self._observation(place, website_status, opportunities)
         research = None
+        composed = None
         if self.deep_research and website:
             try:
                 research = self.deep_research.research(place.name, website, [(url, self._page_text(page)) for url, page in pages])
@@ -115,6 +128,15 @@ class LandscaperLeadEvaluator:
                 primary = research.primary_opportunity
                 observation = research.personalised_observation
                 services = research.specialist_services or services
+                if self.personalisation:
+                    try:
+                        composed = self.personalisation.compose(
+                            place.name,
+                            research,
+                            [(url, self._page_text(page)) for url, page in pages],
+                        )
+                    except Exception:
+                        LOGGER.exception("V3 personalisation failed for %s; retaining V2 research", place.name)
         return LandscaperLead(
             company=company,
             website=website,
@@ -133,7 +155,7 @@ class LandscaperLeadEvaluator:
             primary_opportunity=primary,
             personalised_observation=observation,
             high_value_services=services,
-            research_mode=("deep_research_v2" if research else "standard_fallback" if self.deep_research else "standard"),
+            research_mode=("deep_research_v3" if composed else "deep_research_v2" if research else "standard_fallback" if self.deep_research else "standard"),
             business_summary=research.business_summary if research else "",
             ideal_customers=research.ideal_customers if research else [],
             differentiators=research.differentiators if research else [],
@@ -142,6 +164,16 @@ class LandscaperLeadEvaluator:
             evidence_url=research.evidence_url if research else "",
             research_confidence=research.confidence if research else 0,
             alternative_angle=research.alternative_angle if research else "",
+            personalised_subject_line=composed.subject_line if composed else "",
+            icebreaker=composed.icebreaker if composed else "",
+            relevance_bridge=composed.relevance_bridge if composed else "",
+            personalised_value_proposition=composed.value_proposition if composed else "",
+            personalised_cta=composed.call_to_action if composed else "",
+            target_customer_angle=composed.target_customer_angle if composed else "",
+            personalisation_evidence=composed.supporting_evidence if composed else "",
+            personalisation_evidence_url=composed.evidence_url if composed else "",
+            personalisation_confidence=composed.confidence if composed else 0,
+            personalisation_rejection_reason=(composed.rejection_reason if composed else "Composition did not pass V3 quality gates" if self.personalisation and research else ""),
         )
 
     def _score(self, place: PlaceBusiness, website: str, content: str) -> tuple[int, list[str], list[str]]:

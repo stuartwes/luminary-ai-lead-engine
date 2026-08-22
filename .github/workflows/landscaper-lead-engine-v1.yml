@@ -19,6 +19,10 @@ on:
         description: "Use evidence-checked Deep Research V2 (maximum 10 leads)"
         type: boolean
         default: false
+      deep_research_v3:
+        description: "Use evidence-checked research plus personalised email composition (maximum 10 leads)"
+        type: boolean
+        default: false
   schedule:
     # Two UTC triggers keep the run at 08:00 Europe/London across clock changes.
     # The selector permits only the trigger that maps to 08:00 on that date.
@@ -67,3 +71,4 @@ jobs:
           --location "${{ steps.location.outputs.location }}"
           --max-leads "$MAX_LEADS"
           ${{ inputs.deep_research && '--deep-research' || '' }}
+          ${{ inputs.deep_research_v3 && '--deep-research-v3' || '' }}

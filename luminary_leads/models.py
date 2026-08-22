@@ -98,3 +98,13 @@ class ApprovedLead:
     evidence_url: str = ""
     research_confidence: int = 0
     alternative_outreach_angle: str = ""
+    personalised_subject_line: str = ""
+    icebreaker: str = ""
+    relevance_bridge: str = ""
+    personalised_value_proposition: str = ""
+    personalised_cta: str = ""
+    target_customer_angle: str = ""
+    personalisation_evidence: str = ""
+    personalisation_evidence_url: str = ""
+    personalisation_confidence: int = 0
+    personalisation_rejection_reason: str = ""

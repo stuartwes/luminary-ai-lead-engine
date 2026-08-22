@@ -9,6 +9,7 @@ from .config import load_config
 from .firecrawl import FirecrawlClient
 from .landscaper_lead_engine import LandscaperLeadEvaluator
 from .deep_research import OpenAIDeepResearchClient
+from .personalisation import OpenAIPersonalisationClient
 from .landscaper_pipeline import LandscaperLeadPipeline
 from .places import GooglePlacesClient
 
@@ -20,6 +21,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-leads", type=int, default=30)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--deep-research", action="store_true")
+    parser.add_argument("--deep-research-v3", action="store_true")
     return parser.parse_args()
 
 
@@ -32,7 +34,7 @@ def main() -> int:
     config["target"]["town"] = args.location.strip()
     config["enrichment"]["search_location"] = f"{args.location.strip()},United Kingdom"
     config["collection"]["max_approved_leads_per_run"] = args.max_leads
-    if args.deep_research:
+    if args.deep_research or args.deep_research_v3:
         pilot_max = int(config["deep_research"].get("pilot_max_leads", 10))
         config["collection"]["max_approved_leads_per_run"] = min(args.max_leads, pilot_max)
     env_dry_run = os.getenv("DRY_RUN", "true").casefold() not in {"false", "0", "no"}
@@ -54,16 +56,17 @@ def main() -> int:
         )
         if not value
     ]
-    if args.deep_research and not openai_key:
+    if (args.deep_research or args.deep_research_v3) and not openai_key:
         missing.append("OPENAI_API_KEY")
     if missing:
         raise RuntimeError("Missing required environment variables: " + ", ".join(missing))
     firecrawl = FirecrawlClient(firecrawl_key, config["enrichment"])
-    researcher = OpenAIDeepResearchClient(openai_key, config["deep_research"]) if args.deep_research else None
+    researcher = OpenAIDeepResearchClient(openai_key, config["deep_research"]) if (args.deep_research or args.deep_research_v3) else None
+    composer = OpenAIPersonalisationClient(openai_key, config["deep_research"]["personalisation"]) if args.deep_research_v3 else None
     pipeline = LandscaperLeadPipeline(
         config,
         GooglePlacesClient(places_key),
-        LandscaperLeadEvaluator(firecrawl, config, researcher),
+        LandscaperLeadEvaluator(firecrawl, config, researcher, composer),
         ClickUpClient(clickup_token, list_id, config["clickup"]),
     )
     leads = pipeline.run(dry_run=dry_run)
