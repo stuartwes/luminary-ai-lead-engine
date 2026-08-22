@@ -13,11 +13,17 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Sync approved Landscaper Lead Engine prospects")
     parser.add_argument("--config", default="config/landscaper_lead_engine.yaml")
     parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--route", choices=("standard", "deep_research"), default="standard")
+    parser.add_argument("--route", choices=("standard", "deep_research", "deep_research_v3"), default="standard")
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     config = load_config(args.config)
-    route = config["instantly_deep_research"] if args.route == "deep_research" else config["instantly"]
+    route = (
+        config["instantly_deep_research_v3"]
+        if args.route == "deep_research_v3"
+        else config["instantly_deep_research"]
+        if args.route == "deep_research"
+        else config["instantly"]
+    )
     dry_run = args.dry_run or os.getenv("DRY_RUN", "true").casefold() not in {"false", "0", "no"}
     token = os.getenv("CLICKUP_API_TOKEN", "").strip()
     list_id = os.getenv(route["clickup_list_id_env"], "").strip() or str(
