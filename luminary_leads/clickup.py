@@ -219,6 +219,16 @@ class ClickUpClient:
             evidence_url=self._field(description, "Evidence URL", required=False),
             research_confidence=self._integer_field(description, "Research Confidence"),
             alternative_outreach_angle=self._field(description, "Alternative Outreach Angle", required=False),
+            personalised_subject_line=self._field(description, "Personalised Subject Line", required=False),
+            icebreaker=self._field(description, "Icebreaker", required=False),
+            relevance_bridge=self._field(description, "Relevance Bridge", required=False),
+            personalised_value_proposition=self._field(description, "Personalised Value Proposition", required=False),
+            personalised_cta=self._field(description, "Personalised CTA", required=False),
+            target_customer_angle=self._field(description, "Target Customer Angle", required=False),
+            personalisation_evidence=self._field(description, "Personalisation Evidence", required=False),
+            personalisation_evidence_url=self._field(description, "Personalisation Evidence URL", required=False),
+            personalisation_confidence=self._integer_field(description, "Personalisation Confidence"),
+            personalisation_rejection_reason=self._field(description, "Personalisation Rejection Reason", required=False),
         )
 
     @staticmethod

@@ -107,6 +107,16 @@ Research Evidence: {lead.research_evidence or 'Not available'}
 Evidence URL: {lead.evidence_url or 'Not available'}
 Research Confidence: {lead.research_confidence}/100
 Alternative Outreach Angle: {lead.alternative_angle or 'Not available'}
+Personalised Subject Line: {lead.personalised_subject_line or 'Not available'}
+Icebreaker: {lead.icebreaker or 'Not available'}
+Relevance Bridge: {lead.relevance_bridge or 'Not available'}
+Personalised Value Proposition: {lead.personalised_value_proposition or 'Not available'}
+Personalised CTA: {lead.personalised_cta or 'Not available'}
+Target Customer Angle: {lead.target_customer_angle or 'Not available'}
+Personalisation Evidence: {lead.personalisation_evidence or 'Not available'}
+Personalisation Evidence URL: {lead.personalisation_evidence_url or 'Not available'}
+Personalisation Confidence: {lead.personalisation_confidence}/100
+Personalisation Rejection Reason: {lead.personalisation_rejection_reason or 'None'}
 Approval Status: Pending
 Campaign Status: Ready
 

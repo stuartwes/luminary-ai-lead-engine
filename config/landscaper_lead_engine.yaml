@@ -79,6 +79,11 @@ deep_research:
   max_total_chars: 60000
   minimum_confidence: 75
   request_timeout_seconds: 90
+  personalisation:
+    model: gpt-5.6-sol
+    reasoning_effort: low
+    minimum_confidence: 80
+    request_timeout_seconds: 90
 
 scoring:
   valid_business_email: 20
@@ -143,6 +148,16 @@ clickup:
     - Evidence URL
     - Research Confidence
     - Alternative Outreach Angle
+    - Personalised Subject Line
+    - Icebreaker
+    - Relevance Bridge
+    - Personalised Value Proposition
+    - Personalised CTA
+    - Target Customer Angle
+    - Personalisation Evidence
+    - Personalisation Evidence URL
+    - Personalisation Confidence
+    - Personalisation Rejection Reason
 
 instantly:
   campaign_id_env: LANDSCAPER_LEAD_ENGINE_INSTANTLY_CAMPAIGN_ID
@@ -151,7 +166,7 @@ instantly:
   clickup_list_id: "901220355499"
   approved_clickup_status: completed
   lead_type: landscaper_lead_engine_v1
-  excluded_research_modes: [deep_research_v2]
+  excluded_research_modes: [deep_research_v2, deep_research_v3]
   skip_if_in_workspace: true
   verify_leads_on_import: false
   blocked_lead_domains: *blocked_domains

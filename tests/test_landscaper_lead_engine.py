@@ -1,4 +1,6 @@
 from luminary_leads.landscaper_lead_engine import LandscaperLeadEvaluator
+from luminary_leads.deep_research import DeepResearchResult
+from luminary_leads.personalisation import PersonalisationResult
 from luminary_leads.models import PlaceBusiness
 
 
@@ -25,9 +27,14 @@ class FakeFirecrawl:
     def enrich(company, industry):
         return None
 
+    @staticmethod
+    def map_site(website, limit):
+        return [website]
+
 
 CONFIG = {
     "collection": {"minimum_campaign_score": 65},
+    "deep_research": {"map_limit": 100, "max_pages": 12},
     "scoring": {
         "valid_business_email": 20,
         "relevant_service": 15,
@@ -71,3 +78,34 @@ def test_campaign_scores_and_generates_observation_for_approved_prospect():
     assert lead.lead_class in {"A", "B"}
     assert "quote" in lead.personalised_observation.casefold()
     assert len(lead.personalised_observation.split()) <= 30
+
+
+def test_v3_mode_requires_successful_research_and_composition():
+    class Researcher:
+        def research(self, *args):
+            return DeepResearchResult(
+                business_summary="Design-led landscaper",
+                specialist_services=["courtyard gardens"],
+                primary_opportunity="Reach design-led homeowners",
+                personalised_observation="I noticed your courtyard projects.",
+                evidence_text="courtyard projects",
+                evidence_url="https://examplelandscapes.co.uk",
+                confidence=90,
+            )
+
+    class Composer:
+        def compose(self, *args):
+            return PersonalisationResult(
+                "Your courtyard projects", "I noticed your courtyard projects.",
+                "That gives a focused campaign angle.", "We can identify suitable prospects.",
+                "Worth seeing the outline?", "Design-led homeowners", "courtyard projects",
+                "https://examplelandscapes.co.uk", 90, "",
+            )
+
+    content = "garden design and paving courtyard projects info@examplelandscapes.co.uk"
+    lead = LandscaperLeadEvaluator(FakeFirecrawl(content), CONFIG, Researcher(), Composer()).qualify(
+        place(), "landscape_and_garden_design"
+    )
+    assert lead is not None
+    assert lead.research_mode == "deep_research_v3"
+    assert lead.personalised_subject_line == "Your courtyard projects"
