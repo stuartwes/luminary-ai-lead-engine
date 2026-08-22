@@ -1,0 +1,90 @@
+sequences:
+  - steps:
+      - type: email
+        delay: 0
+        delay_unit: days
+        variants:
+          - subject: "{{personalised_subject_line | A thought about your landscaping business}}"
+            body: |-
+              Hi,
+
+              {{icebreaker | I noticed a specific aspect of the work you showcase that could provide a useful starting point for more focused outreach.}}
+
+              {{relevance_bridge | That gives us a relevant way to approach the kinds of customers most likely to value your work.}}
+
+              {{personalised_value_proposition | We build AI Lead Engines that identify suitable prospects, research them and start relevant conversations around the work a landscaping business wants more of.}}
+
+              {{personalised_cta | Worth me sharing the outline?}}
+
+              Stuart
+
+              If this is not relevant, reply no and I will not follow up.
+      - type: email
+        delay: 3
+        delay_unit: days
+        variants:
+          - subject: "The opportunity I found for {{companyName | your business}}"
+            body: |-
+              Hi,
+
+              The main commercial opportunity I identified for {{companyName | your business}} was {{primary_opportunity | creating a more proactive source of suitable landscaping enquiries}}.
+
+              The strongest customer angle appears to be {{target_customer_angle | people and organisations already considering higher-value landscaping work}}.
+
+              That means an outreach campaign can be built around a real reason to contact them, rather than sending a generic landscaping pitch.
+
+              Would you like me to show you how I would structure it?
+
+              Stuart
+      - type: email
+        delay: 4
+        delay_unit: days
+        variants:
+          - subject: "Why the research highlighted {{companyName | you}}"
+            body: |-
+              Hi,
+
+              The research did more than scan your homepage. It reviewed your wider website and identified the services and details that make the business commercially interesting.
+
+              In your case, that included {{differentiators | the specialist work and supporting evidence presented across the site}}, alongside services such as {{specialist_services | your core landscaping services}}.
+
+              Those details give the outreach enough substance to sound relevant and credible.
+
+              Would seeing a short campaign example be useful?
+
+              Stuart
+      - type: email
+        delay: 4
+        delay_unit: days
+        variants:
+          - subject: "A personalised lead-generation audit"
+            body: |-
+              Hi,
+
+              Another useful angle identified for {{companyName | your business}} was {{alternative_outreach_angle | connecting your strongest work with a more deliberate customer-acquisition process}}.
+
+              I can turn the research into a free AI Lead Generation Audit covering the customer groups, services and acquisition opportunities that appear most relevant to your business.
+
+              Reply AUDIT and I will prepare it, or use:
+              https://www.landscapeleadgeneration.co.uk
+
+              Stuart
+      - type: email
+        delay: 5
+        delay_unit: days
+        variants:
+          - subject: "Shall I close the research?"
+            body: |-
+              Hi,
+
+              I have not heard back, so I will close this out for now.
+
+              I have retained the research around {{target_customer_angle | your likely target customers}} and {{primary_opportunity | the lead-generation opportunity identified for the business}}.
+
+              If you would like the outline later, reply LEADS and I will send it across.
+
+              All the best,
+
+              Stuart
+
+              If this is not relevant, reply no and I will close this out.

@@ -1,0 +1,34 @@
+name: Configure Landscaper Deep Research V3 sequence
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "Apply the V3 personalised sequence without activating the campaign"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  configure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      INSTANTLY_API_KEY: ${{ secrets.INSTANTLY_API }}
+      LANDSCAPER_DEEP_RESEARCH_V3_INSTANTLY_CAMPAIGN_ID: "fe2e8779-0486-473b-a5b4-fa11512ee542"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: pip install .
+      - name: Preview or apply V3 campaign sequence
+        run: >-
+          luminary-configure-landscaper-sequence
+          --config config/instantly_landscaper_deep_research_v3_sequence.yaml
+          --campaign-id "$LANDSCAPER_DEEP_RESEARCH_V3_INSTANTLY_CAMPAIGN_ID"
+          ${{ inputs.apply && '--apply' || '' }}
